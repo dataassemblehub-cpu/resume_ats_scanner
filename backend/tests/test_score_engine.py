@@ -5,20 +5,22 @@ from app.analyzers.score_engine import ATSScoreEngine
 
 client = TestClient(app)
 
-def test_ats_score_engine():
+def test_ats_score_engine_normalization():
     """
-    Test direct score calculation of ATSScoreEngine.
+    Test that missing sections are dynamically normalized and do not destroy overall score.
     """
     engine = ATSScoreEngine()
     
-    resume_data = {
+    # 1. All sections exist
+    resume_data_full = {
         "parsed_text": "Alice Smith\nSummary\nPython developer.",
         "section_text": {
             "skills": "Python, SQL, PySpark, AWS, Docker",
             "experience": "Senior Software Engineer. Designed data pipelines and managed cloud infrastructure.",
             "projects": "ETL orchestration using Airflow. Built web scrapers.",
             "education": "Bachelor of Science in Computer Science"
-        }
+        },
+        "keyword_analysis": {"coverage_percentage": 80.0}
     }
     
     jd_data = {
@@ -29,17 +31,37 @@ def test_ats_score_engine():
         "education": ["Bachelor's Degree"]
     }
     
-    result = engine.score(resume_data, jd_data)
-    assert "skills" in result
-    assert "experience" in result
-    assert "projects" in result
-    assert "education" in result
-    assert "overall" in result
+    result_full = engine.score(resume_data_full, jd_data)
+    assert result_full["skills"] > 50
+    assert result_full["experience"] > 50
+    assert result_full["projects"] > 50
+    assert result_full["education"] > 50
+    assert result_full["overall"] > 50
+
+    # 2. Projects section is missing. Weight for projects (0.1) should be dropped,
+    # and the score should be normalized over remaining weight (0.9).
+    resume_data_missing_projects = {
+        "parsed_text": "Alice Smith\nSummary\nPython developer.",
+        "section_text": {
+            "skills": "Python, SQL, PySpark, AWS, Docker",
+            "experience": "Senior Software Engineer. Designed data pipelines and managed cloud infrastructure.",
+            "projects": "", # Missing!
+            "education": "Bachelor of Science in Computer Science"
+        },
+        "keyword_analysis": {"coverage_percentage": 80.0}
+    }
     
-    # Assert values are reasonable (high score for good matching data)
-    assert result["skills"] > 50
-    assert result["experience"] > 50
-    assert result["overall"] > 50
+    result_missing = engine.score(resume_data_missing_projects, jd_data)
+    assert result_missing["projects"] == 0
+    # Education, Skills, and Experience should still match well and overall should not be ruined.
+    assert result_missing["overall"] > 50
+    
+    # Expected overall calculation check:
+    # overall = (skills * 0.4 + experience * 0.4 + education * 0.1) / 0.9
+    expected_overall = int(round(
+        (result_missing["skills"] * 0.4 + result_missing["experience"] * 0.4 + result_missing["education"] * 0.1) / 0.9
+    ))
+    assert result_missing["overall"] == expected_overall
 
 def test_ats_score_api_route():
     """
@@ -85,7 +107,6 @@ def test_ats_score_api_route():
     assert "education" in json_data
     assert "overall" in json_data
     
-    # Assert type correctness
     assert isinstance(json_data["skills"], int)
     assert isinstance(json_data["experience"], int)
     assert isinstance(json_data["overall"], int)

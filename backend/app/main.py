@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.routes import resume
+from app.routes import resume, jd
 from app.config import settings
 
 # Initialize FastAPI App
@@ -37,6 +37,7 @@ async def value_error_handler(request: Request, exc: ValueError):
 
 # Include Routers
 app.include_router(resume.router)
+app.include_router(jd.router)
 
 # Health Check Route
 @app.get("/", tags=["General"])

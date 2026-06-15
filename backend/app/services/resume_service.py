@@ -2,6 +2,7 @@ from fastapi import UploadFile, HTTPException
 from app.parsers import get_parser
 from app.utils.extraction import extract_name, extract_email, extract_phone
 from app.services.supabase_service import SupabaseService
+from app.utils.logging_config import logger
 
 class ResumeService:
     def __init__(self, supabase_service: SupabaseService):
@@ -61,4 +62,5 @@ class ResumeService:
                 "parsed_text": saved_resume["parsed_text"]
             }
         except Exception as e:
+            logger.error(f"Error processing resume upload: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e))

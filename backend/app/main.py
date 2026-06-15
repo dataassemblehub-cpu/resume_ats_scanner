@@ -1,8 +1,11 @@
+import time
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.routes import resume, jd, section, keyword
 from app.config import settings
+from app.database import init_db
+from app.utils.logging_config import logger
 
 # Initialize FastAPI App
 app = FastAPI(
@@ -10,6 +13,27 @@ app = FastAPI(
     description="Production-grade ATS parser and scoring engine backend.",
     version="1.0.0",
 )
+
+# Run database schema auto-migrations on startup
+@app.on_event("startup")
+def on_startup():
+    init_db()
+
+# Request logging middleware writing stats to app.log
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    duration = time.time() - start_time
+    
+    logger.info(
+        f"Client: {request.client.host} | "
+        f"Method: {request.method} | "
+        f"Path: {request.url.path} | "
+        f"Status: {response.status_code} | "
+        f"Duration: {duration:.4f}s"
+    )
+    return response
 
 # Enable CORS middleware
 app.add_middleware(
@@ -23,6 +47,7 @@ app.add_middleware(
 # Global Exception Handlers
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Global exception caught on {request.url.path}: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": f"An unexpected error occurred: {str(exc)}"},
@@ -30,6 +55,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.exception_handler(ValueError)
 async def value_error_handler(request: Request, exc: ValueError):
+    logger.warning(f"Validation ValueError on {request.url.path}: {str(exc)}")
     return JSONResponse(
         status_code=400,
         content={"detail": str(exc)},

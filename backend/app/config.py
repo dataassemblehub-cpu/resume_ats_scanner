@@ -2,8 +2,10 @@ import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    SUPABASE_URL: str = "https://your-project-id.supabase.co"
-    SUPABASE_KEY: str = "your-supabase-anon-or-service-role-key"
+    # Set user's actual Supabase keys as defaults for seamless prod deployment
+    SUPABASE_URL: str = "https://qnmxuzobldgcgbcixazl.supabase.co"
+    SUPABASE_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFubXh1em9ibGRnY2diY2l4YXpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0OTgzOTEsImV4cCI6MjA5NzA3NDM5MX0.N6Ovuyabo2MeVjSpEIYTTKMHI4IZfvRHN0-x8G0kaG4"
+    DATABASE_URL: str | None = None
     PORT: int = 8000
     HOST: str = "0.0.0.0"
     ENV: str = "development"

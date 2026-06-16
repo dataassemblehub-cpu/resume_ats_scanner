@@ -28,6 +28,7 @@ class ScoreService:
 
         # 2. Extract job description requirements
         jd_data = self.jd_analyzer.analyze(j_text)
+        jd_data["raw_text"] = j_text
 
         # 3. Extract candidate details from the resume
         email = extract_email(r_text)
@@ -46,6 +47,7 @@ class ScoreService:
             "phone": phone,
             "parsed_text": r_text,
             "sections_detected": sections["sections_detected"],
+            "section_text": sections["section_text"],
             "years_of_experience": candidate_exp,
             "education": candidate_edu,
             "keyword_analysis": keyword_analysis

@@ -1,147 +1,93 @@
-from abc import ABC, abstractmethod
-from typing import Dict
-
-class ScoringStrategy(ABC):
-    @abstractmethod
-    def calculate(self, resume_data: dict, jd_data: dict) -> float:
-        """
-        Calculates the score for a specific category.
-        """
-        pass
-
-class KeywordScoringStrategy(ScoringStrategy):
-    def calculate(self, resume_data: dict, jd_data: dict) -> float:
-        # Keyword match counts for 40% of the total score
-        coverage = resume_data.get("keyword_analysis", {}).get("coverage_percentage", 0.0)
-        return (coverage / 100.0) * 40.0
-
-class SectionScoringStrategy(ScoringStrategy):
-    def calculate(self, resume_data: dict, jd_data: dict) -> float:
-        # Section quality counts for 20% of the total score
-        # Core sections: Summary, Experience, Skills, Education, Projects
-        core_sections = ["summary", "experience", "skills", "education", "projects"]
-        sections_detected = resume_data.get("sections_detected", {})
-        
-        detected_count = sum(1 for sec in core_sections if sections_detected.get(sec, False))
-        # Each core section present contributes 4 points (max 20)
-        return float(detected_count * 4)
-
-class ExperienceScoringStrategy(ScoringStrategy):
-    def calculate(self, resume_data: dict, jd_data: dict) -> float:
-        # Experience match counts for 20% of the total score
-        jd_req = jd_data.get("years_of_experience")
-        candidate_exp = resume_data.get("years_of_experience")
-
-        # If the job description does not specify an experience requirement, default to full marks
-        if jd_req is None or jd_req == 0:
-            return 20.0
-
-        if candidate_exp is None:
-            candidate_exp = 0.0
-
-        # If candidate experience meets or exceeds requirement, full 20 points
-        if candidate_exp >= jd_req:
-            return 20.0
-            
-        # Scale score if candidate is under-qualified
-        return (candidate_exp / jd_req) * 20.0
-
-class EducationScoringStrategy(ScoringStrategy):
-    # Tier mapping for ranking educational degrees
-    DEGREE_RANK = {
-        "none": 0,
-        "associate's degree": 1,
-        "bachelor's degree": 2,
-        "master's degree": 3,
-        "mba": 3,
-        "ph.d.": 4
-    }
-
-    def _get_highest_degree_rank(self, degrees: list) -> int:
-        ranks = []
-        for d in degrees:
-            cleaned = d.strip().lower()
-            rank = self.DEGREE_RANK.get(cleaned, 0)
-            # Check for partial matches
-            if rank == 0:
-                if "bachelor" in cleaned:
-                    rank = 2
-                elif "master" in cleaned or "mba" in cleaned:
-                    rank = 3
-                elif "doctor" in cleaned or "phd" in cleaned or "ph.d" in cleaned:
-                    rank = 4
-                elif "associate" in cleaned:
-                    rank = 1
-            ranks.append(rank)
-        return max(ranks) if ranks else 0
-
-    def calculate(self, resume_data: dict, jd_data: dict) -> float:
-        # Education match counts for 10% of the total score
-        jd_degrees = jd_data.get("education", [])
-        candidate_degrees = resume_data.get("education", [])
-
-        # If the Job Description doesn't specify any education level, default to full marks
-        if not jd_degrees:
-            return 10.0
-
-        jd_rank = self._get_highest_degree_rank(jd_degrees)
-        candidate_rank = self._get_highest_degree_rank(candidate_degrees)
-
-        if jd_rank == 0:
-            return 10.0
-
-        if candidate_rank >= jd_rank:
-            return 10.0
-
-        # Scale score if candidate rank is lower than requirement
-        return (candidate_rank / jd_rank) * 10.0
-
-class FormattingScoringStrategy(ScoringStrategy):
-    def calculate(self, resume_data: dict, jd_data: dict) -> float:
-        # Formatting and basic contact details count for 10% of the total score
-        score = 0.0
-        
-        # Email present (+4 points)
-        if resume_data.get("email"):
-            score += 4.0
-            
-        # Phone present (+4 points)
-        if resume_data.get("phone"):
-            score += 4.0
-            
-        # Document length verification (+2 points)
-        # Verify document has a minimal word count (e.g. > 100 words) to avoid short/empty uploads
-        text_content = resume_data.get("parsed_text", "")
-        word_count = len(text_content.split())
-        if word_count > 100:
-            score += 2.0
-            
-        return score
+from app.analyzers.semantic_analyzer import SemanticAnalyzer
 
 class ATSScoreEngine:
     def __init__(self):
-        self.strategies = {
-            "keywords": KeywordScoringStrategy(),
-            "sections": SectionScoringStrategy(),
-            "experience": ExperienceScoringStrategy(),
-            "education": EducationScoringStrategy(),
-            "formatting": FormattingScoringStrategy()
-        }
+        self.semantic_analyzer = SemanticAnalyzer()
 
     def score(self, resume_data: dict, jd_data: dict) -> dict:
         """
-        Coordinates the score calculation strategies and returns the overall score and breakdown.
+        Calculates ATS scores by comparing segmented resume sections
+        semantically against the job description requirements.
         """
-        breakdown = {}
-        total_score = 0.0
+        section_text = resume_data.get("section_text", {})
+        r_text = resume_data.get("parsed_text", "")
+        j_text = jd_data.get("raw_text", "")
 
-        for key, strategy in self.strategies.items():
-            val = strategy.calculate(resume_data, jd_data)
-            # Round score segments to 2 decimal places
-            breakdown[key] = round(val, 2)
-            total_score += val
+        # We will collect the scores and weights for sections that actually exist
+        available_scores = []
+        available_weights = []
+
+        # 1. Skills Score (Hybrid: 50% Keyword Coverage + 50% Semantic similarity)
+        resume_skills = section_text.get("skills", "").strip()
+        skills_exists = bool(resume_skills)
+        
+        jd_skills_list = jd_data.get("skills", []) + jd_data.get("tools", [])
+        jd_skills_text = ", ".join(jd_skills_list) if jd_skills_list else j_text
+        
+        if skills_exists:
+            skills_res = self.semantic_analyzer.analyze_similarity(resume_skills, jd_skills_text)
+            skills_semantic = skills_res["semantic_score"]
+        else:
+            skills_semantic = 0.0
+
+        keyword_coverage = resume_data.get("keyword_analysis", {}).get("coverage_percentage", 0.0)
+        skills_score = (keyword_coverage * 0.5) + (skills_semantic * 0.5)
+        
+        if skills_exists:
+            available_scores.append(skills_score)
+            available_weights.append(0.4)
+
+        # 2. Experience Score
+        resume_exp = section_text.get("experience", "").strip()
+        experience_exists = bool(resume_exp)
+        if experience_exists:
+            jd_exp_list = jd_data.get("responsibilities", [])
+            # Check if responsibilities text exists in list and is non-empty before joining
+            jd_exp_text = " ".join(jd_exp_list) if (jd_exp_list and len(jd_exp_list) > 0) else j_text
+            exp_res = self.semantic_analyzer.analyze_similarity(resume_exp, jd_exp_text)
+            experience_score = exp_res["semantic_score"]
+            available_scores.append(experience_score)
+            available_weights.append(0.4)
+        else:
+            experience_score = 0.0
+
+        # 3. Projects Score
+        resume_projects = section_text.get("projects", "").strip()
+        projects_exists = bool(resume_projects)
+        if projects_exists:
+            projects_res = self.semantic_analyzer.analyze_similarity(resume_projects, j_text)
+            projects_score = projects_res["semantic_score"]
+            available_scores.append(projects_score)
+            available_weights.append(0.1)
+        else:
+            projects_score = 0.0
+
+        # 4. Education Score
+        resume_edu = section_text.get("education", "").strip()
+        education_exists = bool(resume_edu)
+        if education_exists:
+            jd_edu_list = jd_data.get("education", [])
+            # Check if education list exists and is non-empty before joining
+            jd_edu_text = " ".join(jd_edu_list) if (jd_edu_list and len(jd_edu_list) > 0) else j_text
+            edu_res = self.semantic_analyzer.analyze_similarity(resume_edu, jd_edu_text)
+            education_score = edu_res["semantic_score"]
+            available_scores.append(education_score)
+            available_weights.append(0.1)
+        else:
+            education_score = 0.0
+
+        # Calculate dynamic weighted normalized overall score
+        total_weight = sum(available_weights)
+        if total_weight > 0:
+            weighted_sum = sum(score * weight for score, weight in zip(available_scores, available_weights))
+            overall = int(round(weighted_sum / total_weight))
+        else:
+            overall = 0
 
         return {
-            "score": int(round(total_score)),
-            "breakdown": breakdown
+            "skills": int(round(skills_score)),
+            "experience": int(round(experience_score)),
+            "projects": int(round(projects_score)),
+            "education": int(round(education_score)),
+            "overall": overall
         }

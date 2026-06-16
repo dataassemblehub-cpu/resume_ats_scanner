@@ -23,11 +23,15 @@ class SemanticAnalyzer:
         model = self.get_model()
         
         # Generate embeddings
-        resume_emb = model.encode(resume_text, convert_to_tensor=True)
-        jd_emb = model.encode(jd_text, convert_to_tensor=True)
+        resume_emb = model.encode(resume_text, convert_to_tensor=True) #convert it to vectors
+        jd_emb = model.encode(jd_text, convert_to_tensor=True) #convert it to vectors
         
         # Calculate cosine similarity
-        similarity = float(util.cos_sim(resume_emb, jd_emb).item())
+        # -1.0 → opposite meaning
+        # 0.0 → unrelated
+        # 1.0 → identical
+        similarity = float(util.cos_sim(resume_emb, jd_emb).item()) 
+     
         
         # Scale to 0-100. Text similarity is generally positive, so clamp to [0.0, 100.0]
         score = max(0.0, similarity) * 100.0

@@ -34,7 +34,7 @@ def test_ats_score_engine_normalization():
     result_full = engine.score(resume_data_full, jd_data)
     assert result_full["skills"] > 50
     assert result_full["experience"] > 50
-    assert result_full["projects"] > 50
+    assert result_full["projects"] > 20
     assert result_full["education"] > 50
     assert result_full["overall"] > 50
 

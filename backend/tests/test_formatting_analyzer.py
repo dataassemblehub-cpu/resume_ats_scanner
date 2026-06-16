@@ -19,15 +19,28 @@ def test_formatting_analyzer_clean():
         "Experienced software developer specializing in Python backend engineering.\n"
         "\n"
         "Skills\n"
-        "• Python, FastAPI, Docker, SQL\n"
+        "• Python, FastAPI, Docker, SQL, PostgreSQL, AWS, CI/CD, Git, Linux, Kubernetes, Redis, RabbitMQ\n"
         "\n"
         "Experience\n"
         "• Software Engineer at Tech Corp (2023 - Present)\n"
-        "  - Built scalable REST APIs using FastAPI and Python.\n"
-        "  - Optimized database query runtimes by 30%.\n"
-        "• Junior Developer at Dev Inc (2021 - 2023)\n"
-        "  - Deployed containerized applications to AWS.\n"
-        "  - Maintained code coverage and resolved frontend bugs.\n"
+        "  - Built scalable REST APIs using FastAPI and Python, serving over 1M requests per day.\n"
+        "  - Optimized database query runtimes by 30% through index optimization and query refactoring.\n"
+        "  - Implemented caching strategies using Redis to reduce latency by 50%.\n"
+        "\n"
+        "• Lead Developer at Dev Inc (2021 - 2023)\n"
+        "  - Deployed containerized applications to AWS utilizing Docker and ECS.\n"
+        "  - Maintained code coverage above 90% and resolved critical frontend and backend bugs.\n"
+        "  - Automated deployment pipelines using GitHub Actions, saving 10 hours of manual work per week.\n"
+        "\n"
+        "• Junior Engineer at Web Solutions (2019 - 2021)\n"
+        "  - Designed and developed responsive frontend components using React and TypeScript.\n"
+        "  - Written unit and integration tests using Jest and Pytest to ensure reliability.\n"
+        "  - Integrated third-party APIs and services to extend application capabilities.\n"
+        "\n"
+        "Projects\n"
+        "• Portfolio Website: Built a personal portfolio website to showcase projects and experience.\n"
+        "• Task Manager App: Developed a task management application with React and Node.js.\n"
+        "• Chat Application: Created a real-time chat application using WebSockets and Socket.io.\n"
         "\n"
         "Education\n"
         "• Bachelor of Science in Computer Science (2021)\n"
@@ -76,9 +89,9 @@ def test_formatting_analyzer_issues():
     assert "Missing Skills section." in result["issues"]
     
     # Long paragraph, non-standard symbols, education before experience, and table layouts should be flagged as warnings
-    assert any("very long" in w for w in result["warnings"])
+    assert any("very long" in w.lower() for w in result["warnings"])
     assert any("non-standard" in w for w in result["warnings"])
-    assert any("Education is listed before" in w for w in result["warnings"])
+    assert any("education is listed before" in w.lower() for w in result["warnings"])
     assert any("table" in w for w in result["warnings"])
     
     # Should contain recommendations to solve them

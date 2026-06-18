@@ -79,7 +79,7 @@ def test_generate_recommendations_success():
     with patch("app.services.gemini_recommendation_service.settings") as mock_settings, \
          patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_settings.GEMINI_API_KEY = "test_api_key"
-        mock_settings.GEMINI_MODEL = "gemini-1.5-flash"
+        mock_settings.GEMINI_MODEL = "gemini-2.5-flash"
         mock_post.return_value = mock_resp
 
         result = asyncio.run(service.generate_recommendations(DUMMY_RESUME, DUMMY_JD, DUMMY_ATS))
@@ -101,7 +101,7 @@ def test_generate_recommendations_cache_hit():
     with patch("app.services.gemini_recommendation_service.settings") as mock_settings, \
          patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_settings.GEMINI_API_KEY = "test_api_key"
-        mock_settings.GEMINI_MODEL = "gemini-1.5-flash"
+        mock_settings.GEMINI_MODEL = "gemini-2.5-flash"
         mock_post.return_value = mock_resp
 
         # First call (Cache Miss)
@@ -129,7 +129,7 @@ def test_generate_recommendations_retry_logic():
          patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post, \
          patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
         mock_settings.GEMINI_API_KEY = "test_api_key"
-        mock_settings.GEMINI_MODEL = "gemini-1.5-flash"
+        mock_settings.GEMINI_MODEL = "gemini-2.5-flash"
         
         # Returns 429 on first call, 200 on second call
         mock_post.side_effect = [mock_429, mock_200]
@@ -155,7 +155,7 @@ def test_generate_recommendations_fallback_on_401():
          patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post, \
          patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
         mock_settings.GEMINI_API_KEY = "test_api_key"
-        mock_settings.GEMINI_MODEL = "gemini-1.5-flash"
+        mock_settings.GEMINI_MODEL = "gemini-2.5-flash"
         mock_post.return_value = mock_401
 
         result = asyncio.run(service.generate_recommendations(DUMMY_RESUME, DUMMY_JD, DUMMY_ATS))
@@ -177,7 +177,7 @@ def test_generate_recommendations_fallback_on_exhausted_retries():
          patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post, \
          patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
         mock_settings.GEMINI_API_KEY = "test_api_key"
-        mock_settings.GEMINI_MODEL = "gemini-1.5-flash"
+        mock_settings.GEMINI_MODEL = "gemini-2.5-flash"
         mock_post.return_value = mock_500
 
         result = asyncio.run(service.generate_recommendations(DUMMY_RESUME, DUMMY_JD, DUMMY_ATS))
@@ -200,7 +200,7 @@ def test_generate_recommendations_fallback_on_invalid_json():
     with patch("app.services.gemini_recommendation_service.settings") as mock_settings, \
          patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_settings.GEMINI_API_KEY = "test_api_key"
-        mock_settings.GEMINI_MODEL = "gemini-1.5-flash"
+        mock_settings.GEMINI_MODEL = "gemini-2.5-flash"
         mock_post.return_value = mock_resp
 
         result = asyncio.run(service.generate_recommendations(DUMMY_RESUME, DUMMY_JD, DUMMY_ATS))

@@ -1,0 +1,68 @@
+# Development Progress Log - Resume ATS Scanner
+
+This document summarizes the development activities performed phase-wise for the Resume ATS Scanner project.
+
+---
+
+### Phase 1: Resume Upload & Parsing
+* **Document Parsing**: Implemented extraction of raw text from PDF files using `PyMuPDF` (`fitz`) and Word documents (`.docx`) using `python-docx`.
+* **Contact Information Extraction**: Integrated regex pattern matching to extract candidate `email` and `phone` numbers.
+* **Basic Layout Parsing**: Implemented layout-aware name extraction heuristic from the resume header.
+* **API Endpoint**: Exposed `POST /resume/upload` returning structured candidate contact details and parsed text.
+* **Database Schema**: Created PostgreSQL schema in SQLAlchemy (`User`, `Resume` models) with auto-creation of tables on startup and UUID-based server-side defaults.
+
+### Phase 2: Job Description (JD) Parsing
+* **NLP Pipeline**: Configured spaCy (`en_core_web_sm`) to process unstructured Job Description text.
+* **Fields Isolation**: Structured the parser to extract Job Title, Technical Skills & Tools, Experience requirements (e.g. "5+ years"), Education requirements, and bulleted responsibilities.
+* **Taxonomy Matcher**: Built skill and tool lists matching rules using pre-defined technical term matchers.
+* **API Endpoint**: Exposed `POST /jd/parse` for extracting structured JD specifications.
+
+### Phase 3: Resume Section Detector
+* **Header Segmentation**: Built a heuristic parser matching standard resume sections (`summary`, `experience`, `projects`, `skills`, `education`, `certificates`, `achievements`).
+* **Fallback Mechanisms**: Implemented fallback NLP/list checks to isolate skills or experience blocks when explicit section headers are missing.
+* **API Endpoint**: Exposed `POST /resume/sections` returning segmented section text blocks.
+
+### Phase 4: Keyword Extraction Engine
+* **TF-IDF Vectorization**: Integrated `TfidfVectorizer` to extract the top 15 most important technical keywords and bigrams from the Job Description.
+* **Occurrence Analysis**: Implemented word-boundary regex matching to search for JD keywords within the Resume.
+* **Metrics**: Calculated `coverage_percentage` and detailed frequency match counts.
+* **API Endpoint**: Exposed `POST /analyze/keywords`.
+
+### Phase 5: ATS Score Engine & Refinements
+* **Section-level Scoring**: Mapped section weights: Skills (40%), Experience (40%), Projects (10%), Education (10%).
+* **Dynamic Weight Normalization**: Implemented an arithmetic weight scaler to exclude missing optional sections from penalty, computing scores over active weights only:
+  $$\text{overall\_score} = \frac{\sum (\text{active\_section\_score} \times \text{weight})}{\sum (\text{active\_weights})}$$
+* **Hybrid Skills Score**: Combined vocabulary keyword coverage (50%) and conceptual semantic similarity (50%) for the skills rating:
+  $$\text{skills\_score} = \text{keyword\_coverage} \times 0.5 + \text{skills\_semantic} \times 0.5$$
+* **Chronological Degree Comparison**: Compares candidate's parsed education degree ranks against the JD requirement (PhD > Master > Bachelor > Associate).
+* **API Endpoint**: Exposed `POST /analyze/score` returning structured scores for skills, experience, projects, education, and overall.
+
+### Phase 6: Semantic Matching
+* **Embeddings Model**: Integrated SentenceTransformer `all-MiniLM-L6-v2` locally cached in the backend.
+* **Similarity Engine**: Calculates cosine similarity between segmented resume sections and parsed JD requirement text.
+* **ATS Scaling**: Clamped cosine similarity values to `0.0 - 1.0` and scaled to `0 - 100`.
+* **API Endpoint**: Exposed `POST /analyze/semantic`.
+
+### Phase 7: ATS Formatting Layout Analyzer
+* **Contact & Content Checks**: Flags missing contact info (email, phone, LinkedIn) and missing Skills section as critical Issues.
+* **Readability Warnings**: Flags very long text paragraphs (>80 words) without bullet points.
+* **Layout Parsing**: Detects tables and multi-column layouts via delimiter spacing (vertical pipes, tab characters, and multiple consecutive spaces).
+* **Formatting Density**: Detects excessive non-standard list symbols (e.g. ★, ✔, ❖) that break ATS parsers.
+* **Flow & Length Checks**: Warns on extreme word counts (<200 or >1000), low bullet points count (<5), or incorrect chronological section ordering (Education before Professional Experience).
+* **API Endpoint**: Exposed `POST /analyze/formatting` returning Issues, Warnings, and Recommendations.
+
+### Phase 8: Premium Next.js Frontend Dashboard
+* **Framework Bootstrapping**: Boostrapped a Next.js (TypeScript, App Router) web application with ESLint and npm packages configured for developer efficiency.
+* **Modern Design System**: Rebuilt `globals.css` with a sleek dark-mode glassmorphism visual theme (blurs, glow accents, Outfit typography, SVG stroke animations).
+* **Split-Screen Layout**: Designed a responsive interface with an input control panel on the left and dynamic dashboard reports on the right, which auto-stacks vertically on mobile viewports.
+* **Staged Progress Loading**: Implemented a checklist stage tracker animating progress through the ATS backend pipeline steps (upload, segment, extract, match, format checks).
+* **Score Transparency**: Computes and displays a breakdown of the ATS score and shows the exact math formula dynamically (normalizing missing section weights).
+* **Section parsed indicator**: Displays a grid showing found vs missing resume sections.
+* **Formatting analyzer integration**: Displays layout issues and warnings alongside their estimated score impact points (e.g. Missing Skills: -8 pts, Table: -5 pts).
+* **Keywords breakdown**: Groups target terms into Matched, Missing, and Frequently Used (including occurrence counts).
+* **Future feature placeholders**: Designed placeholders for scan history, AI recommendations, and export endpoints.
+* **CORS Patch**: Patched backend CORS middleware configurations by setting `allow_credentials=False` to resolve browser wildcard conflicts.
+
+---
+
+*Status: All frontend files compile type-safely and backend tests are passing successfully.*

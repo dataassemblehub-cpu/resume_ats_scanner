@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import FileUpload from '@/components/FileUpload';
 import LoadingStages, { StageItem } from '@/components/LoadingStages';
 import Dashboard from '@/components/Dashboard';
-import { runComprehensiveAnalysis, ComprehensiveAnalysisResult } from '@/lib/api';
+import { runComprehensiveAnalysis, ComprehensiveAnalysisResult, getAIRecommendations } from '@/lib/api';
 
 type AppState = 'idle' | 'scanning' | 'success' | 'error';
 
@@ -19,6 +19,7 @@ export default function Home() {
     { id: 3, label: 'Extracting Key Job Description Requirements', status: 'pending' },
     { id: 4, label: 'Performing Semantic Match & Keyword Coverage', status: 'pending' },
     { id: 5, label: 'Analyzing Layout & Document Formatting', status: 'pending' },
+    { id: 6, label: 'Generating AI Recommendations', status: 'pending' },
   ]);
 
   const updateStageStatus = (id: number, status: StageItem['status']) => {
@@ -38,6 +39,7 @@ export default function Home() {
       { id: 3, label: 'Extracting Key Job Description Requirements', status: 'pending' },
       { id: 4, label: 'Performing Semantic Match & Keyword Coverage', status: 'pending' },
       { id: 5, label: 'Analyzing Layout & Document Formatting', status: 'pending' },
+      { id: 6, label: 'Generating AI Recommendations', status: 'pending' },
     ]);
   };
 
@@ -66,12 +68,39 @@ export default function Home() {
 
       const result = await apiPromise;
 
-      // Finish formatting check and complete
+      // Finish formatting check and start AI recommendations (Stage 6)
       await delay(600);
       updateStageStatus(5, 'done');
+      updateStageStatus(6, 'active');
+
+      // Prepare deterministic inputs for Gemini service
+      const atsResults = {
+        overall: result.score.overall,
+        skills: result.score.skills,
+        experience: result.score.experience,
+        projects: result.score.projects,
+        education: result.score.education,
+        keywords: {
+          matched: result.keywords.matched,
+          missing: result.keywords.missing,
+        },
+        formatting: {
+          issues: result.formatting.issues,
+          warnings: result.formatting.warnings,
+        }
+      };
+
+      // Call AI Recommendations API
+      const recommendations = await getAIRecommendations(resumeText, jdText, atsResults);
+
+      await delay(1000);
+      updateStageStatus(6, 'done');
       await delay(400);
 
-      setAnalysisResult(result);
+      setAnalysisResult({
+        ...result,
+        recommendations,
+      });
       setState('success');
     } catch (err: any) {
       console.error(err);

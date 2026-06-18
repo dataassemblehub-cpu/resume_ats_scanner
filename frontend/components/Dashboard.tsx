@@ -6,7 +6,7 @@ import OverviewSection from './OverviewSection';
 import SectionChecks from './SectionChecks';
 import KeywordDetails from './KeywordDetails';
 import FormattingDetails from './FormattingDetails';
-import SuggestionsPlaceholder from './SuggestionsPlaceholder';
+import SuggestionsSection from './SuggestionsSection';
 
 interface DashboardProps {
   result: ComprehensiveAnalysisResult;
@@ -94,7 +94,7 @@ export default function Dashboard({ result, onReset }: DashboardProps) {
         )}
 
         {activeTab === 'ai-suggestions' && (
-          <SuggestionsPlaceholder />
+          <SuggestionsSection recommendations={result.recommendations} />
         )}
 
         {activeTab === 'history' && (

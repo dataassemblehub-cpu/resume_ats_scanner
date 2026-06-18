@@ -45,6 +45,20 @@ export interface SectionResult {
   section_text: Record<string, string>;
 }
 
+export interface AIRecommendationsResult {
+  status: 'success' | 'unavailable';
+  message: string | null;
+  resume_summary: string | null;
+  strengths: string[];
+  weaknesses: string[];
+  missing_skills: string[];
+  ats_improvements: string[];
+  recruiter_improvements: string[];
+  suggested_bullet_points: string[];
+  resume_improvements: string[];
+  ats_recommendations: string[];
+}
+
 export interface ComprehensiveAnalysisResult {
   resumeDetails: ResumeUploadResult;
   score: ScoreResult;
@@ -52,6 +66,7 @@ export interface ComprehensiveAnalysisResult {
   semantic: SemanticResult;
   formatting: FormattingResult;
   sections: SectionResult;
+  recommendations?: AIRecommendationsResult;
 }
 
 /**
@@ -120,4 +135,36 @@ export async function runComprehensiveAnalysis(
     formatting,
     sections,
   };
+}
+
+/**
+ * Fetches AI recommendations from the backend.
+ */
+export async function getAIRecommendations(
+  resumeText: string,
+  jdText: string,
+  atsResults: Record<string, any>
+): Promise<AIRecommendationsResult> {
+  try {
+    return await postJSON<AIRecommendationsResult>('/analyze/recommendation', {
+      resume_text: resumeText,
+      jd_text: jdText,
+      ats_results: atsResults,
+    });
+  } catch (error: any) {
+    console.error('Failed to fetch AI recommendations:', error);
+    return {
+      status: 'unavailable',
+      message: error.message || 'AI recommendations are temporarily offline.',
+      resume_summary: null,
+      strengths: [],
+      weaknesses: [],
+      missing_skills: [],
+      ats_improvements: [],
+      recruiter_improvements: [],
+      suggested_bullet_points: [],
+      resume_improvements: [],
+      ats_recommendations: [],
+    };
+  }
 }

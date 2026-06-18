@@ -67,6 +67,7 @@ export interface ComprehensiveAnalysisResult {
   formatting: FormattingResult;
   sections: SectionResult;
   recommendations?: AIRecommendationsResult;
+  jdText?: string;
 }
 
 /**
@@ -143,13 +144,15 @@ export async function runComprehensiveAnalysis(
 export async function getAIRecommendations(
   resumeText: string,
   jdText: string,
-  atsResults: Record<string, any>
+  atsResults: Record<string, any>,
+  resumeId?: string
 ): Promise<AIRecommendationsResult> {
   try {
     return await postJSON<AIRecommendationsResult>('/analyze/recommendation', {
       resume_text: resumeText,
       jd_text: jdText,
       ats_results: atsResults,
+      resume_id: resumeId,
     });
   } catch (error: any) {
     console.error('Failed to fetch AI recommendations:', error);

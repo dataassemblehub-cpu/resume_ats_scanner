@@ -9,9 +9,12 @@ interface OverviewSectionProps {
   keywords: KeywordResult;
   formatting: FormattingResult;
   sections: SectionResult;
+  recommendations?: any;
+  onGenerateAI: () => void;
+  isGenerating: boolean;
 }
 
-export default function OverviewSection({ score, semantic, keywords, formatting, sections }: OverviewSectionProps) {
+export default function OverviewSection({ score, semantic, keywords, formatting, sections, recommendations, onGenerateAI, isGenerating }: OverviewSectionProps) {
   // Compute a heuristic formatting score percentage based on issues (-15% each) and warnings (-5% each)
   const formattingPercentage = Math.max(
     30,
@@ -104,6 +107,42 @@ export default function OverviewSection({ score, semantic, keywords, formatting,
           </span>
         </div>
       </div>
+
+      {/* AI Recommendations CTA Panel */}
+      {!recommendations && (
+        <div className="glass-panel p-6 bg-gradient-to-r from-violet-500/10 via-sky-500/5 to-transparent border border-violet-500/20 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex flex-col gap-1 relative z-10 max-w-lg">
+            <h4 className="text-sm font-extrabold text-white flex items-center gap-2">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+              </span>
+              ✨ AI-Powered Recommendations Available
+            </h4>
+            <p className="text-xs text-gray-400 leading-relaxed mt-1">
+              Google Gemini can analyze your profile gaps against this job description, prioritize missing technical skills, and write custom ATS-friendly experience bullet points.
+            </p>
+          </div>
+          <button
+            onClick={onGenerateAI}
+            disabled={isGenerating}
+            className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-sky-600 hover:from-violet-500 hover:to-sky-500 disabled:from-violet-500/50 disabled:to-sky-500/50 text-white text-xs font-bold rounded-lg shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 whitespace-nowrap self-start sm:self-auto relative z-10"
+          >
+            {isGenerating ? (
+              <span className="flex items-center gap-1.5">
+                <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Generating...
+              </span>
+            ) : (
+              "✨ Generate AI Recommendations"
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Score Transparency Panel */}
       <div className="glass-panel p-6">

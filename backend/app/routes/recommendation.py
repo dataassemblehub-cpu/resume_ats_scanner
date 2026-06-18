@@ -28,7 +28,8 @@ async def generate_recommendation(
         results = await service.generate_recommendations(
             request.resume_text,
             request.jd_text,
-            request.ats_results
+            request.ats_results,
+            request.resume_id
         )
         return results
     except ValueError as ve:

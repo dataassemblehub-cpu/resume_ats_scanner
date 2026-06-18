@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ComprehensiveAnalysisResult } from '@/lib/api';
+import { ComprehensiveAnalysisResult, getAIRecommendations, AIRecommendationsResult } from '@/lib/api';
 import OverviewSection from './OverviewSection';
 import SectionChecks from './SectionChecks';
 import KeywordDetails from './KeywordDetails';
@@ -17,6 +17,55 @@ type TabType = 'overview' | 'keywords' | 'formatting' | 'ai-suggestions' | 'hist
 
 export default function Dashboard({ result, onReset }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [recommendations, setRecommendations] = useState<AIRecommendationsResult | undefined>(result.recommendations);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateAI = async () => {
+    // Switch to Suggestions tab automatically to show loader
+    setActiveTab('ai-suggestions');
+    setIsGenerating(true);
+    try {
+      const atsResults = {
+        overall: result.score.overall,
+        skills: result.score.skills,
+        experience: result.score.experience,
+        projects: result.score.projects,
+        education: result.score.education,
+        keywords: {
+          matched: result.keywords.matched,
+          missing: result.keywords.missing,
+        },
+        formatting: {
+          issues: result.formatting.issues,
+          warnings: result.formatting.warnings,
+        }
+      };
+
+      const recs = await getAIRecommendations(
+        result.resumeDetails.parsed_text,
+        result.jdText || '',
+        atsResults,
+        result.resumeDetails.id
+      );
+      setRecommendations(recs);
+
+      // Update localStorage cache with generated recommendations
+      const saved = localStorage.getItem('ats_analysis_result');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          parsed.recommendations = recs;
+          localStorage.setItem('ats_analysis_result', JSON.stringify(parsed));
+        } catch (e) {
+          console.error('Failed to update localStorage with recommendations', e);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const tabs: { key: TabType; label: string }[] = [
     { key: 'overview', label: 'Overview' },
@@ -77,6 +126,9 @@ export default function Dashboard({ result, onReset }: DashboardProps) {
               keywords={result.keywords}
               formatting={result.formatting}
               sections={result.sections}
+              recommendations={recommendations}
+              onGenerateAI={handleGenerateAI}
+              isGenerating={isGenerating}
             />
             <SectionChecks
               sections={result.sections}
@@ -94,7 +146,52 @@ export default function Dashboard({ result, onReset }: DashboardProps) {
         )}
 
         {activeTab === 'ai-suggestions' && (
-          <SuggestionsSection recommendations={result.recommendations} />
+          recommendations ? (
+            <SuggestionsSection recommendations={recommendations} />
+          ) : (
+            <div className="glass-panel p-12 flex flex-col items-center justify-center text-center gap-6 relative overflow-hidden min-h-[400px]">
+              {/* Decorative glowing gradient ring */}
+              <div className="absolute w-[300px] h-[300px] bg-gradient-to-r from-violet-500/15 to-sky-500/15 rounded-full blur-[60px] -top-12 -right-12 pointer-events-none" />
+              <div className="absolute w-[200px] h-[200px] bg-gradient-to-r from-teal-500/10 to-emerald-500/10 rounded-full blur-[40px] -bottom-12 -left-12 pointer-events-none" />
+
+              {isGenerating ? (
+                <div className="flex flex-col items-center gap-4 relative z-10">
+                  <div className="w-12 h-12 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
+                  <div className="flex flex-col gap-1 max-w-sm">
+                    <h3 className="text-md font-bold text-white tracking-tight">Generating AI Suggestions</h3>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Google Gemini is analyzing profile gaps and rewriting experience bullet points...
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-500/20 to-sky-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
+                    <svg className="w-8 h-8 text-sky-400 group-hover:scale-110 transition-transform duration-300 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 21m0 0l-.813-5.096L9 21zm0 0h1m-1 0H8m6.813-5.096L15 21m0 0l-.813-5.096L15 21zm0 0h.5m-.5 0h-.5M8 6h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                    </svg>
+                  </div>
+
+                  <div className="flex flex-col gap-2 max-w-md relative z-10">
+                    <h3 className="text-xl font-extrabold text-white tracking-tight">
+                      Generate AI Recommendations
+                    </h3>
+                    <p className="text-sm text-gray-400 leading-relaxed">
+                      Leverage Google Gemini to analyze gaps, prioritize missing technical skills, and generate tailor-made experience bullet optimizations tailored to your job description.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleGenerateAI}
+                    className="px-6 py-3 bg-gradient-to-r from-violet-600 to-sky-600 hover:from-violet-500 hover:to-sky-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-violet-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 relative z-10"
+                  >
+                    ✨ Generate AI Recommendations
+                  </button>
+                </>
+              )}
+            </div>
+          )
         )}
 
         {activeTab === 'history' && (

@@ -5,6 +5,7 @@ class RecommendationRequest(BaseModel):
     resume_text: str
     jd_text: str
     ats_results: Dict[str, Any]
+    resume_id: Optional[str] = None
 
 class RecommendationResponse(BaseModel):
     status: str = "success"  # "success" or "unavailable"

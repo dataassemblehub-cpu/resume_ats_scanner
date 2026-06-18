@@ -94,6 +94,35 @@ class SupabaseService:
         except Exception as e:
             raise RuntimeError(f"Database error during resume insertion: {str(e)}")
 
+    def get_resume_recommendations(self, resume_id: str) -> dict | None:
+        """
+        Retrieves the persisted jd_text and recommendations for a given resume.
+        """
+        if not self.is_configured:
+            return None
+        try:
+            response = self.client.table("resumes").select("jd_text", "recommendations").eq("id", resume_id).execute()
+            if response.data and len(response.data) > 0:
+                return response.data[0]
+            return None
+        except Exception as e:
+            print(f"Warning: Failed to fetch recommendations from DB: {str(e)}")
+            return None
+
+    def save_resume_recommendations(self, resume_id: str, jd_text: str, recommendations: dict) -> None:
+        """
+        Saves the target jd_text and generated recommendations into the 'resumes' table.
+        """
+        if not self.is_configured:
+            return
+        try:
+            self.client.table("resumes").update({
+                "jd_text": jd_text,
+                "recommendations": recommendations
+            }).eq("id", resume_id).execute()
+        except Exception as e:
+            print(f"Warning: Failed to persist recommendations to DB: {str(e)}")
+
     def upload_file_to_storage(self, file_name: str, file_content: bytes, bucket_name: str = "resumes") -> str | None:
         """
         Uploads file binary to Supabase Storage bucket and returns the public URL.

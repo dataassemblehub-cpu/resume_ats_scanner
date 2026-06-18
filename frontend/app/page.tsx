@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FileUpload from '@/components/FileUpload';
 import LoadingStages, { StageItem } from '@/components/LoadingStages';
 import Dashboard from '@/components/Dashboard';
@@ -12,6 +12,20 @@ export default function Home() {
   const [state, setState] = useState<AppState>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [analysisResult, setAnalysisResult] = useState<ComprehensiveAnalysisResult | null>(null);
+
+  // Load saved analysis result on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('ats_analysis_result');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setAnalysisResult(parsed);
+        setState('success');
+      } catch (e) {
+        console.error('Failed to parse saved analysis result', e);
+      }
+    }
+  }, []);
   
   const [stages, setStages] = useState<StageItem[]>([
     { id: 1, label: 'Uploading Resume & Job Description', status: 'pending' },
@@ -19,7 +33,6 @@ export default function Home() {
     { id: 3, label: 'Extracting Key Job Description Requirements', status: 'pending' },
     { id: 4, label: 'Performing Semantic Match & Keyword Coverage', status: 'pending' },
     { id: 5, label: 'Analyzing Layout & Document Formatting', status: 'pending' },
-    { id: 6, label: 'Generating AI Recommendations', status: 'pending' },
   ]);
 
   const updateStageStatus = (id: number, status: StageItem['status']) => {
@@ -39,7 +52,6 @@ export default function Home() {
       { id: 3, label: 'Extracting Key Job Description Requirements', status: 'pending' },
       { id: 4, label: 'Performing Semantic Match & Keyword Coverage', status: 'pending' },
       { id: 5, label: 'Analyzing Layout & Document Formatting', status: 'pending' },
-      { id: 6, label: 'Generating AI Recommendations', status: 'pending' },
     ]);
   };
 
@@ -68,39 +80,17 @@ export default function Home() {
 
       const result = await apiPromise;
 
-      // Finish formatting check and start AI recommendations (Stage 6)
+      // Finish formatting check (Stage 5)
       await delay(600);
       updateStageStatus(5, 'done');
-      updateStageStatus(6, 'active');
-
-      // Prepare deterministic inputs for Gemini service
-      const atsResults = {
-        overall: result.score.overall,
-        skills: result.score.skills,
-        experience: result.score.experience,
-        projects: result.score.projects,
-        education: result.score.education,
-        keywords: {
-          matched: result.keywords.matched,
-          missing: result.keywords.missing,
-        },
-        formatting: {
-          issues: result.formatting.issues,
-          warnings: result.formatting.warnings,
-        }
-      };
-
-      // Call AI Recommendations API
-      const recommendations = await getAIRecommendations(resumeText, jdText, atsResults);
-
-      await delay(1000);
-      updateStageStatus(6, 'done');
       await delay(400);
 
-      setAnalysisResult({
+      const finalResult = {
         ...result,
-        recommendations,
-      });
+        jdText: jdText,
+      };
+      setAnalysisResult(finalResult);
+      localStorage.setItem('ats_analysis_result', JSON.stringify(finalResult));
       setState('success');
     } catch (err: any) {
       console.error(err);
@@ -122,6 +112,7 @@ export default function Home() {
     setState('idle');
     setAnalysisResult(null);
     setErrorMessage('');
+    localStorage.removeItem('ats_analysis_result');
   };
 
   return (

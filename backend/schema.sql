@@ -15,5 +15,7 @@ CREATE TABLE IF NOT EXISTS resumes (
     email VARCHAR(255),
     phone VARCHAR(50),
     name VARCHAR(255),
+    jd_text TEXT,
+    recommendations JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

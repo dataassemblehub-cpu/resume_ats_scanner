@@ -208,6 +208,42 @@ def test_generate_recommendations_fallback_on_invalid_json():
         assert result["status"] == "unavailable"
         assert mock_post.call_count == 1
 
+def test_generate_recommendations_model_fallback_rotation():
+    """
+    Test that retry attempts cycle through configured primary and fallback models.
+    """
+    service = GeminiRecommendationService()
+    service._cache.clear()
+
+    mock_429 = get_mock_response(429)
+    mock_200 = get_mock_response(200, MOCK_GEMINI_JSON)
+
+    with patch("app.services.gemini_recommendation_service.settings") as mock_settings, \
+         patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post, \
+         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        mock_settings.GEMINI_API_KEY = "test_api_key"
+        mock_settings.GEMINI_MODEL = "gemini-2.5-flash"
+        mock_settings.GEMINI_FALLBACK_MODELS = "gemini-2.5-flash-lite,gemini-flash-lite-latest"
+
+        # Returns 429 on first, 429 on second, 200 on third
+        mock_post.side_effect = [mock_429, mock_429, mock_200]
+
+        result = asyncio.run(service.generate_recommendations(DUMMY_RESUME, DUMMY_JD, DUMMY_ATS))
+
+        assert result["status"] == "success"
+        assert mock_post.call_count == 3
+        assert mock_sleep.call_count == 2
+
+        # Verify URLs contained the correct model names in rotation order
+        calls = mock_post.call_args_list
+        url_attempt1 = calls[0][0][0]
+        url_attempt2 = calls[1][0][0]
+        url_attempt3 = calls[2][0][0]
+
+        assert "gemini-2.5-flash" in url_attempt1
+        assert "gemini-2.5-flash-lite" in url_attempt2
+        assert "gemini-flash-lite-latest" in url_attempt3
+
 def test_recommendation_api_route():
     """
     Test POST /analyze/recommendation API endpoint using Dependency Injection override.

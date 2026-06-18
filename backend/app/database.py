@@ -31,6 +31,18 @@ def init_db():
     try:
         logger.info("Checking database tables and running auto-migrations...")
         Base.metadata.create_all(bind=engine)
+        
+        # Run table alterations to add new columns if they are not already present
+        try:
+            with engine.connect() as conn:
+                from sqlalchemy import text
+                conn.execute(text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS jd_text TEXT;"))
+                conn.execute(text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS recommendations JSONB;"))
+                conn.commit()
+                logger.info("Database migration check: successfully ensured 'jd_text' and 'recommendations' columns exist.")
+        except Exception as alt_err:
+            logger.warning(f"Could not check or run table migrations: {str(alt_err)}")
+            
         logger.info("Database schema verification complete: tables 'users' and 'resumes' are verified/created.")
     except Exception as e:
         logger.error(f"Database auto-migration failed: {str(e)}")

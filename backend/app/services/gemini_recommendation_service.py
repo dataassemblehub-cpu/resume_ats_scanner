@@ -17,7 +17,11 @@ class GeminiRecommendationService(AIRecommendationService):
     _cache: Dict[str, tuple[float, dict]] = {}
     _cache_ttl = 86400  # 24 hours in seconds
 
-    async def generate_recommendations(self, resume_text: str, jd_text: str, ats_results: dict) -> dict:
+    def __init__(self):
+        from app.services.supabase_service import SupabaseService
+        self.supabase_service = SupabaseService()
+
+    async def generate_recommendations(self, resume_text: str, jd_text: str, ats_results: dict, resume_id: str | None = None) -> dict:
         req_id = str(uuid.uuid4())
         
         # 1. API Key Validation
@@ -42,6 +46,20 @@ class GeminiRecommendationService(AIRecommendationService):
                 del self._cache[cache_key]
         else:
             logger.info(f"[{req_id}] Cache MISS. Initiating API call.")
+
+        # 2b. Database Cache Lookup
+        if resume_id:
+            try:
+                db_record = self.supabase_service.get_resume_recommendations(resume_id)
+                if db_record and db_record.get("jd_text") == jd_text and db_record.get("recommendations"):
+                    stored_recs = db_record["recommendations"]
+                    if isinstance(stored_recs, str):
+                        stored_recs = json.loads(stored_recs)
+                    if stored_recs.get("status") == "success":
+                        logger.info(f"[{req_id}] DB Cache HIT for resume_id {resume_id}. Returning stored recommendations.")
+                        return stored_recs
+            except Exception as e:
+                logger.error(f"[{req_id}] Failed to check database for stored recommendations: {str(e)}")
 
         # 3. Construct Prompts & Instructions
         prompt = (
@@ -104,8 +122,6 @@ class GeminiRecommendationService(AIRecommendationService):
             ]
         }
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent?key={settings.GEMINI_API_KEY}"
-        
         payload = {
             "contents": [
                 {
@@ -129,11 +145,24 @@ class GeminiRecommendationService(AIRecommendationService):
         max_retries = 3
         retry_status_codes = {429, 500, 502, 503, 504}
         
+        # Build fallback model chain from config settings
+        models_to_try = [settings.GEMINI_MODEL]
+        if hasattr(settings, "GEMINI_FALLBACK_MODELS") and settings.GEMINI_FALLBACK_MODELS:
+            models_to_try.extend([m.strip() for m in settings.GEMINI_FALLBACK_MODELS.split(",") if m.strip()])
+        
         async with httpx.AsyncClient(timeout=30.0) as client:
             for attempt in range(1, max_retries + 1):
                 start_time = time.time()
+                # Determine model for this attempt.
+                # Cycle through models_to_try so that if the primary model gets rate-limited (429),
+                # we immediately try alternative fallback models on subsequent attempts.
+                model_idx = (attempt - 1) % len(models_to_try)
+                current_model = models_to_try[model_idx]
+                
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{current_model}:generateContent?key={settings.GEMINI_API_KEY}"
+                
                 try:
-                    logger.info(f"[{req_id}] Sending HTTP request to Gemini (Attempt {attempt}/{max_retries}). Model: {settings.GEMINI_MODEL}")
+                    logger.info(f"[{req_id}] Sending HTTP request to Gemini (Attempt {attempt}/{max_retries}). Model: {current_model}")
                     response = await client.post(url, json=payload)
                     latency = time.time() - start_time
                     status = response.status_code
@@ -156,8 +185,17 @@ class GeminiRecommendationService(AIRecommendationService):
                             parsed_rec["status"] = "success"
                             parsed_rec["message"] = None
                             
-                            # Cache the result
+                            # Cache the result in memory
                             self._cache[cache_key] = (time.time() + self._cache_ttl, parsed_rec)
+                            
+                            # Persist in DB if resume_id is provided
+                            if resume_id:
+                                try:
+                                    self.supabase_service.save_resume_recommendations(resume_id, jd_text, parsed_rec)
+                                    logger.info(f"[{req_id}] Successfully persisted recommendations in DB for resume_id {resume_id}.")
+                                except Exception as db_err:
+                                    logger.error(f"[{req_id}] Failed to persist recommendations in DB: {str(db_err)}")
+                                    
                             return parsed_rec
                         except Exception as e:
                             logger.error(f"[{req_id}] Validation/Parsing error on Gemini response content: {str(e)}")

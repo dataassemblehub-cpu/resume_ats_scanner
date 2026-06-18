@@ -10,7 +10,7 @@ from app.utils.logging_config import logger
 from app.services.ai_recommendation_service import AIRecommendationService
 
 class GeminiRecommendationService(AIRecommendationService):
-    PROMPT_VERSION = "v2"
+    PROMPT_VERSION = "v3"
     
     # In-memory cache to save API usage
     # Format: { cache_key: (expiration_timestamp, response_dict) }
@@ -118,7 +118,10 @@ class GeminiRecommendationService(AIRecommendationService):
             ],
             "generationConfig": {
                 "response_mime_type": "application/json",
-                "response_schema": response_schema
+                "response_schema": response_schema,
+                "thinkingConfig": {
+                    "thinkingBudget": 0
+                }
             }
         }
 

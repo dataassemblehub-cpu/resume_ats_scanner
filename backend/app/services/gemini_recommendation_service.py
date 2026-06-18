@@ -10,7 +10,7 @@ from app.utils.logging_config import logger
 from app.services.ai_recommendation_service import AIRecommendationService
 
 class GeminiRecommendationService(AIRecommendationService):
-    PROMPT_VERSION = "v1"
+    PROMPT_VERSION = "v2"
     
     # In-memory cache to save API usage
     # Format: { cache_key: (expiration_timestamp, response_dict) }
@@ -46,13 +46,18 @@ class GeminiRecommendationService(AIRecommendationService):
         # 3. Construct Prompts & Instructions
         prompt = (
             f"You are an expert resume reviewer and professional recruiter.\n"
-            f"Review the candidate's resume and job description along with the computed ATS metrics to generate actionable, tailored recommendations.\n\n"
+            f"Review the candidate's resume and target job description along with the computed ATS metrics to generate concrete, highly specific, and actionable recommendations.\n\n"
             f"CRITICAL RULES:\n"
             f"1. Do NOT recalculate or invent ATS scores. Use the deterministic results provided.\n"
             f"2. Never fabricate certifications, companies, employers, or years of experience.\n"
-            f"3. Do NOT add technologies or skills to the experience bullet suggestions that are not already present in the resume.\n"
+            f"3. Do NOT add technologies or skills to the experience bullet suggestions that are not already present in the resume or specifically asked for in the job description.\n"
             f"4. Preserve the user's actual quantified achievements (e.g. percentages, money saved, metrics).\n"
-            f"5. Keep rewritten bullets concise and ATS-friendly.\n\n"
+            f"5. All suggestions must be specific and actionable. Avoid vague advice like 'improve formatting', 'add keywords', or 'write better bullets'. Instead, state exactly what to add, remove, or edit.\n"
+            f"6. 'suggested_bullet_points' MUST be actual, ready-to-use rewritten experience sentences based on the candidate's real work history in the resume, rewritten to integrate missing keywords naturally and increase impact. Do not output meta-instructions.\n\n"
+            f"Candidate Resume:\n"
+            f"\"\"\"\n{resume_text}\n\"\"\"\n\n"
+            f"Target Job Description:\n"
+            f"\"\"\"\n{jd_text}\n\"\"\"\n\n"
             f"Computed ATS Metrics:\n"
             f"- Overall score: {ats_results.get('overall')}\n"
             f"- Skills score: {ats_results.get('skills')}\n"
@@ -68,7 +73,7 @@ class GeminiRecommendationService(AIRecommendationService):
             f"- Gaps/Weaknesses and Strengths\n"
             f"- Priority missing skills (in priority order)\n"
             f"- High-impact ATS improvements\n"
-            f"- Experience bullet suggestions\n"
+            f"- Experience bullet suggestions (actual rewritten sentences from the candidate experience, incorporating missing keywords)\n"
             f"- Formatting recommendations\n"
             f"- Recruiter readability advice\n"
         )

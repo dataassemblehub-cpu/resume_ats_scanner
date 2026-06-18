@@ -10,7 +10,7 @@ from app.utils.logging_config import logger
 from app.services.ai_recommendation_service import AIRecommendationService
 
 class GeminiRecommendationService(AIRecommendationService):
-    PROMPT_VERSION = "v3"
+    PROMPT_VERSION = "v4"
     
     # In-memory cache to save API usage
     # Format: { cache_key: (expiration_timestamp, response_dict) }
@@ -169,7 +169,17 @@ class GeminiRecommendationService(AIRecommendationService):
                         if attempt == max_retries:
                             logger.error(f"[{req_id}] Max retries reached. Server returned transient status: {status}")
                             break
-                        backoff = 2 ** attempt
+                        
+                        # Try to get retry-after header, fallback to custom backoff
+                        headers = getattr(response, "headers", None)
+                        retry_after = headers.get("retry-after") if headers else None
+                        if retry_after and retry_after.isdigit():
+                            backoff = int(retry_after)
+                            logger.info(f"[{req_id}] API requested Retry-After delay: {backoff}s")
+                        else:
+                            # 429 rate limit requires longer to clear than server 5xx errors
+                            backoff = 5 * attempt if status == 429 else 2 ** attempt
+                            
                         logger.warning(f"[{req_id}] Transient status code {status}. Backoff retrying in {backoff}s...")
                         await asyncio.sleep(backoff)
                         

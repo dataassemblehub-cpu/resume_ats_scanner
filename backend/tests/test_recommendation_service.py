@@ -139,8 +139,8 @@ def test_generate_recommendations_retry_logic():
         assert result["status"] == "success"
         assert mock_post.call_count == 2
         assert mock_sleep.call_count == 1
-        # First retry backoff: 2 ** 1 = 2 seconds
-        mock_sleep.assert_called_with(2)
+        # First retry backoff for 429: 5 * 1 = 5 seconds
+        mock_sleep.assert_called_with(5)
 
 def test_generate_recommendations_fallback_on_401():
     """

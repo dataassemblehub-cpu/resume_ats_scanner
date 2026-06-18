@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FileUpload from '@/components/FileUpload';
 import LoadingStages, { StageItem } from '@/components/LoadingStages';
 import Dashboard from '@/components/Dashboard';
-import { runComprehensiveAnalysis, ComprehensiveAnalysisResult } from '@/lib/api';
+import { runComprehensiveAnalysis, ComprehensiveAnalysisResult, getAIRecommendations } from '@/lib/api';
 
 type AppState = 'idle' | 'scanning' | 'success' | 'error';
 
@@ -12,6 +12,20 @@ export default function Home() {
   const [state, setState] = useState<AppState>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [analysisResult, setAnalysisResult] = useState<ComprehensiveAnalysisResult | null>(null);
+
+  // Load saved analysis result on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('ats_analysis_result');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setAnalysisResult(parsed);
+        setState('success');
+      } catch (e) {
+        console.error('Failed to parse saved analysis result', e);
+      }
+    }
+  }, []);
   
   const [stages, setStages] = useState<StageItem[]>([
     { id: 1, label: 'Uploading Resume & Job Description', status: 'pending' },
@@ -66,12 +80,17 @@ export default function Home() {
 
       const result = await apiPromise;
 
-      // Finish formatting check and complete
+      // Finish formatting check (Stage 5)
       await delay(600);
       updateStageStatus(5, 'done');
       await delay(400);
 
-      setAnalysisResult(result);
+      const finalResult = {
+        ...result,
+        jdText: jdText,
+      };
+      setAnalysisResult(finalResult);
+      localStorage.setItem('ats_analysis_result', JSON.stringify(finalResult));
       setState('success');
     } catch (err: any) {
       console.error(err);
@@ -93,6 +112,7 @@ export default function Home() {
     setState('idle');
     setAnalysisResult(null);
     setErrorMessage('');
+    localStorage.removeItem('ats_analysis_result');
   };
 
   return (

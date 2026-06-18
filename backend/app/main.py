@@ -2,7 +2,7 @@ import time
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.routes import resume, jd, section, keyword, score, semantic, formatting
+from app.routes import resume, jd, section, keyword, score, semantic, formatting, recommendation
 from app.config import settings
 from app.database import init_db
 from app.utils.logging_config import logger
@@ -69,6 +69,7 @@ app.include_router(keyword.router)
 app.include_router(score.router)
 app.include_router(semantic.router)
 app.include_router(formatting.router)
+app.include_router(recommendation.router)
 
 # Health Check Route
 @app.get("/", tags=["General"])

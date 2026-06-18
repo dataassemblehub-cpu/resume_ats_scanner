@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey, text, func
+from sqlalchemy import Column, String, DateTime, Text, ForeignKey, text, func, JSON
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from app.models.base import Base
@@ -19,4 +19,6 @@ class Resume(Base):
     email = Column(String(255), nullable=True)
     phone = Column(String(50), nullable=True)
     name = Column(String(255), nullable=True)
+    jd_text = Column(Text, nullable=True)
+    recommendations = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

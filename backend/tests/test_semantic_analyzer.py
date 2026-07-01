@@ -67,3 +67,12 @@ def test_semantic_endpoint_validation():
     response = client.post("/analyze/semantic", json=payload)
     assert response.status_code == 400
     assert "cannot be empty" in response.json()["detail"]
+
+    # Identical resume and jd text
+    payload = {
+        "resume_text": "Python developer.",
+        "jd_text": "Python developer."
+    }
+    response = client.post("/analyze/semantic", json=payload)
+    assert response.status_code == 400
+    assert "cannot be identical" in response.json()["detail"]

@@ -15,6 +15,8 @@ class KeywordAnalyzerService:
             raise ValueError("Resume text cannot be empty.")
         if not j_text:
             raise ValueError("Job description text cannot be empty.")
+        if r_text == j_text:
+            raise ValueError("Resume and Job Description cannot be identical.")
 
         try:
             return self.analyzer.analyze(r_text, j_text)

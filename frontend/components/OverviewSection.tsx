@@ -12,9 +12,112 @@ interface OverviewSectionProps {
   recommendations?: any;
   onGenerateAI: () => void;
   isGenerating: boolean;
+  prevScore?: {
+    overall: number;
+    skills: number;
+    experience: number;
+    projects: number;
+    education: number;
+    formatting: number;
+    semantic: number;
+    keywords: number;
+  } | null;
 }
 
-export default function OverviewSection({ score, semantic, keywords, formatting, sections, recommendations, onGenerateAI, isGenerating }: OverviewSectionProps) {
+const renderDelta = (current: number, prev: number | undefined | null) => {
+  if (prev === undefined || prev === null) return null;
+  const delta = current - prev;
+  const isPositive = delta > 0;
+  const isNegative = delta < 0;
+  
+  return (
+    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded font-mono ml-1.5 inline-flex items-center ${
+      isPositive 
+        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+        : isNegative 
+          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
+          : 'bg-white/5 text-gray-500 border border-white/5'
+    }`}>
+      {isPositive ? `+${delta}` : delta === 0 ? '0' : `${delta}`}
+    </span>
+  );
+};
+
+const getATSGrade = (score: number) => {
+  if (score >= 85) return 'Excellent Match';
+  if (score >= 70) return 'Good Match';
+  if (score >= 50) return 'Partial Match';
+  return 'Unresolved Gaps';
+};
+
+const getSemanticGrade = (score: number) => {
+  if (score >= 80) return 'High conceptual fit';
+  if (score >= 60) return 'Moderate conceptual fit';
+  return 'Unrelated experience';
+};
+
+const getKeywordGrade = (score: number) => {
+  if (score >= 75) return 'Dense keyword match';
+  if (score >= 50) return 'Partial vocabulary';
+  return 'Low vocabulary match';
+};
+
+const getFormattingGrade = (score: number) => {
+  if (score >= 90) return 'ATS-Friendly Structure';
+  if (score >= 75) return 'Minor Warnings';
+  return 'Critically Blocked';
+};
+
+const ProgressGauge = ({ value, size = 70, strokeWidth = 6, colorClass = "text-sky-500", glowColor = "rgba(14, 165, 233, 0.2)" }: { value: number; size?: number; strokeWidth?: number; colorClass?: string; glowColor?: string }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (value / 100) * circumference;
+
+  return (
+    <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+      <div 
+        className="absolute inset-0 rounded-full blur-[8px] opacity-20 transition-all duration-300"
+        style={{ backgroundColor: glowColor }}
+      />
+      <svg className="w-full h-full transform -rotate-90 relative z-10">
+        <circle
+          className="text-white/5"
+          strokeWidth={strokeWidth}
+          stroke="currentColor"
+          fill="transparent"
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+        />
+        <circle
+          className={`${colorClass} transition-all duration-1000 ease-out`}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          stroke="currentColor"
+          fill="transparent"
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+        />
+      </svg>
+      <span className="absolute text-sm font-extrabold text-white font-mono z-10">{value}%</span>
+    </div>
+  );
+};
+
+export default function OverviewSection({ 
+  score, 
+  semantic, 
+  keywords, 
+  formatting, 
+  sections, 
+  recommendations, 
+  onGenerateAI, 
+  isGenerating,
+  prevScore
+}: OverviewSectionProps) {
   // Compute a heuristic formatting score percentage based on issues (-15% each) and warnings (-5% each)
   const formattingPercentage = Math.max(
     30,
@@ -44,67 +147,55 @@ export default function OverviewSection({ score, semantic, keywords, formatting,
       {/* 2x2 Grid of Summary Cards */}
       <div className="grid grid-cols-2 gap-4">
         {/* ATS Score Card */}
-        <div className="glass-panel p-6 flex flex-col justify-between border-l-4 border-l-violet-500 relative overflow-hidden group">
-          <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 opacity-5 group-hover:scale-110 transition-all duration-300">
-            <svg className="w-28 h-28 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
-            </svg>
+        <div className="glass-panel p-5 flex items-center justify-between gap-4 border-l-4 border-l-violet-500 glow-card-violet group">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Overall ATS Score</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-violet-400 font-semibold">{getATSGrade(score.overall)}</span>
+              {prevScore && renderDelta(score.overall, prevScore.overall)}
+            </div>
+            <p className="text-[10px] text-gray-500 mt-1 max-w-[145px] leading-relaxed">Weighted match score across key sections</p>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Overall ATS Score</p>
-            <p className="text-4xl font-extrabold text-white mt-2 font-sans">{score.overall}</p>
-          </div>
-          <span className="text-xs text-violet-400 mt-4 font-medium flex items-center gap-1">
-            Weighted Match Score
-          </span>
+          <ProgressGauge value={score.overall} colorClass="text-violet-500" glowColor="rgba(139, 92, 246, 0.3)" />
         </div>
 
         {/* Semantic Match Card */}
-        <div className="glass-panel p-6 flex flex-col justify-between border-l-4 border-l-sky-500 relative overflow-hidden group">
-          <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 opacity-5 group-hover:scale-110 transition-all duration-300">
-            <svg className="w-28 h-28 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
+        <div className="glass-panel p-5 flex items-center justify-between gap-4 border-l-4 border-l-sky-500 glow-card-sky group">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Semantic Match</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-sky-400 font-semibold">{getSemanticGrade(semantic.semantic_score)}</span>
+              {prevScore && renderDelta(Math.round(semantic.semantic_score), prevScore.semantic)}
+            </div>
+            <p className="text-[10px] text-gray-500 mt-1 max-w-[145px] leading-relaxed">NLP conceptual profile similarity</p>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Semantic Match</p>
-            <p className="text-4xl font-extrabold text-white mt-2 font-sans">{Math.round(semantic.semantic_score)}%</p>
-          </div>
-          <span className="text-xs text-sky-400 mt-4 font-medium flex items-center gap-1">
-            Concept-level alignment
-          </span>
+          <ProgressGauge value={Math.round(semantic.semantic_score)} colorClass="text-sky-500" glowColor="rgba(14, 165, 233, 0.3)" />
         </div>
 
         {/* Keyword Coverage Card */}
-        <div className="glass-panel p-6 flex flex-col justify-between border-l-4 border-l-teal-500 relative overflow-hidden group">
-          <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 opacity-5 group-hover:scale-110 transition-all duration-300">
-            <svg className="w-28 h-28 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M7 20l4-16m2 16l4-16" />
-            </svg>
+        <div className="glass-panel p-5 flex items-center justify-between gap-4 border-l-4 border-l-teal-500 glow-card-teal group">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keyword Coverage</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-teal-400 font-semibold">{getKeywordGrade(keywords.coverage_percentage)}</span>
+              {prevScore && renderDelta(Math.round(keywords.coverage_percentage), prevScore.keywords)}
+            </div>
+            <p className="text-[10px] text-gray-500 mt-1 max-w-[145px] leading-relaxed">Target vocabulary density matched</p>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Keyword Coverage</p>
-            <p className="text-4xl font-extrabold text-white mt-2 font-sans">{Math.round(keywords.coverage_percentage)}%</p>
-          </div>
-          <span className="text-xs text-teal-400 mt-4 font-medium flex items-center gap-1">
-            Vocabulary density match
-          </span>
+          <ProgressGauge value={Math.round(keywords.coverage_percentage)} colorClass="text-teal-500" glowColor="rgba(20, 184, 166, 0.3)" />
         </div>
 
         {/* Formatting Score Card */}
-        <div className="glass-panel p-6 flex flex-col justify-between border-l-4 border-l-amber-500 relative overflow-hidden group">
-          <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 opacity-5 group-hover:scale-110 transition-all duration-300">
-            <svg className="w-28 h-28 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
+        <div className="glass-panel p-5 flex items-center justify-between gap-4 border-l-4 border-l-amber-500 glow-card-amber group">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Formatting Rating</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-amber-400 font-semibold">{getFormattingGrade(formattingPercentage)}</span>
+              {prevScore && renderDelta(formattingPercentage, prevScore.formatting)}
+            </div>
+            <p className="text-[10px] text-gray-500 mt-1 max-w-[145px] leading-relaxed">Document layout & readability check</p>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Formatting Rating</p>
-            <p className="text-4xl font-extrabold text-white mt-2 font-sans">{formattingPercentage}%</p>
-          </div>
-          <span className="text-xs text-amber-400 mt-4 font-medium flex items-center gap-1">
-            ATS readability checks
-          </span>
+          <ProgressGauge value={formattingPercentage} colorClass="text-amber-500" glowColor="rgba(245, 158, 11, 0.3)" />
         </div>
       </div>
 
@@ -144,6 +235,47 @@ export default function OverviewSection({ score, semantic, keywords, formatting,
         </div>
       )}
 
+      {/* Category Match Breakdown */}
+      <div className="glass-panel p-6">
+        <div className="flex flex-col gap-1 mb-4 border-b border-white/5 pb-2">
+          <h3 className="text-sm font-bold text-gray-100 uppercase tracking-wider flex items-center justify-between">
+            <span className="text-gradient">Match Category Score Breakdown</span>
+            <span className="text-[10px] text-gray-400 normal-case font-normal">Actionable breakdown of ATS scoring criteria</span>
+          </h3>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {[
+            { name: 'Skills Match', score: score.skills, key: 'skills', weight: '40%', color: 'from-teal-500 to-emerald-500' },
+            { name: 'Experience Match', score: score.experience, key: 'experience', weight: '20%', color: 'from-violet-500 to-purple-500' },
+            { name: 'Projects Match', score: score.projects, key: 'projects', weight: '20%', color: 'from-sky-500 to-blue-500' },
+            { name: 'Education Match', score: score.education, key: 'education', weight: '10%', color: 'from-green-500 to-teal-500' },
+            { name: 'Formatting Quality', score: formattingPercentage, key: 'formatting', weight: '10%', color: 'from-amber-500 to-orange-500' },
+          ].map((cat) => (
+            <div key={cat.name} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <span className="font-semibold text-gray-300 w-36 shrink-0">{cat.name}</span>
+              
+              <div className="flex-1 flex items-center gap-3">
+                <div className="h-2.5 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 relative">
+                  <div
+                    className={`h-full bg-gradient-to-r ${cat.color} rounded-full transition-all duration-1000 ease-out`}
+                    style={{ width: `${cat.score}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-end min-w-[75px] gap-0.5 shrink-0">
+                  <span className="font-mono font-bold text-white text-right">{cat.score}%</span>
+                  {prevScore && renderDelta(cat.score, prevScore[cat.key as keyof typeof prevScore])}
+                </div>
+              </div>
+
+              <span className="text-[9px] font-bold text-gray-400 bg-white/5 border border-white/5 px-2 py-0.5 rounded w-16 text-center select-none shrink-0 ml-2">
+                Weight: {cat.weight}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Score Transparency Panel */}
       <div className="glass-panel p-6">
         <h3 className="text-sm font-bold text-gray-100 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">
@@ -179,9 +311,13 @@ export default function OverviewSection({ score, semantic, keywords, formatting,
               Sum contribution = {activeWeights.map(w => (w.score * w.weight).toFixed(1)).join(' + ')} ={' '}
               {activeWeights.reduce((sum, w) => sum + w.score * w.weight, 0).toFixed(1)}
               <br />
-              Total weight denominator = {sumWeights.toFixed(1)}{' '}
-              {sumWeights < 1.0 && <span className="text-amber-400">(normalized for missing sections)</span>}
-              <br />
+              {sumWeights < 1.0 && (
+                <>
+                  Total weight denominator = {sumWeights.toFixed(1)}{' '}
+                  <span className="text-amber-400">(normalized for missing sections)</span>
+                  <br />
+                </>
+              )}
               <div className="mt-2 text-sm text-gray-200 font-semibold border-t border-white/10 pt-2 flex justify-between">
                 <span>Final Normalized Score:</span>
                 <span className="text-sky-400">

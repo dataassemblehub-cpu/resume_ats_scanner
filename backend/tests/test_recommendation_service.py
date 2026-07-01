@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 import httpx
 
 from app.main import app
+from app.config import settings
 from app.services.gemini_recommendation_service import GeminiRecommendationService
 from app.routes.recommendation import get_recommendation_service
 
@@ -248,6 +249,12 @@ def test_recommendation_api_route():
     """
     Test POST /analyze/recommendation API endpoint using Dependency Injection override.
     """
+    # Bypass authentication for endpoint test
+    orig_bypass = settings.BYPASS_AUTH
+    orig_env = settings.ENV
+    settings.BYPASS_AUTH = True
+    settings.ENV = "development"
+    
     mock_service = AsyncMock()
     mock_service.generate_recommendations.return_value = {
         "status": "success",
@@ -271,7 +278,12 @@ def test_recommendation_api_route():
         "ats_results": DUMMY_ATS
     }
 
-    response = client.post("/analyze/recommendation", json=payload)
+    headers = {"Authorization": "Bearer mock-token-test@example.com"}
+    response = client.post("/analyze/recommendation", json=payload, headers=headers)
+    
+    # Restore settings
+    settings.BYPASS_AUTH = orig_bypass
+    settings.ENV = orig_env
     
     assert response.status_code == 200
     json_data = response.json()

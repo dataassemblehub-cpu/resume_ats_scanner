@@ -152,11 +152,24 @@ class SupabaseService:
                 if old_uuid != new_uuid:
                     print(f"Migrating user {email} from old UUID {old_uuid} to new UUID {new_uuid}...")
                     
-                    # 1. Update resumes user_id first
+                    # 1. Insert temporary new user with temp email to satisfy resumes FK constraint
+                    temp_email = f"{email}-temp-{uuid.uuid4()}"
+                    self.client.table("users").insert({
+                        "id": new_uuid,
+                        "email": temp_email,
+                        "subscription_plan": old_user.get("subscription_plan", "free"),
+                        "ai_generation_count": old_user.get("ai_generation_count", 0),
+                        "last_ai_generation_at": old_user.get("last_ai_generation_at")
+                    }).execute()
+                    
+                    # 2. Update resumes user_id to new_uuid
                     self.client.table("resumes").update({"user_id": new_uuid}).eq("user_id", old_uuid).execute()
                     
-                    # 2. Update users id
-                    self.client.table("users").update({"id": new_uuid}).eq("id", old_uuid).execute()
+                    # 3. Delete old user record
+                    self.client.table("users").delete().eq("id", old_uuid).execute()
+                    
+                    # 4. Update new user to restore original email
+                    self.client.table("users").update({"email": email}).eq("id", new_uuid).execute()
                     
                 response = self.client.table("users").select("*").eq("id", new_uuid).execute()
                 return response.data[0] if response.data else None

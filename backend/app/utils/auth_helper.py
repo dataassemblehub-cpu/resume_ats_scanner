@@ -67,6 +67,9 @@ async def get_current_user(authorization: str | None = Header(None)) -> dict:
         # Retrieve user database profile to fetch plan, counts, etc.
         user_profile = supabase_service.get_user_by_uuid(user_uuid)
         if not user_profile:
+            user_profile = supabase_service.migrate_user_uuid_by_email(email, user_uuid)
+            
+        if not user_profile:
             # Fallback to create profile record if missing
             supabase_service.client.table("users").insert({
                 "id": user_uuid,

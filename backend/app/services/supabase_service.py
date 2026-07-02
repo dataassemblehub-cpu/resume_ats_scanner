@@ -119,6 +119,52 @@ class SupabaseService:
             print(f"Warning: Failed to fetch user by UUID: {str(e)}")
             return None
 
+    def migrate_user_uuid_by_email(self, email: str, new_uuid: str) -> dict | None:
+        """
+        Migrates an existing user's record (and associated resumes) from an old UUID
+        to the new Supabase Auth UUID if the email matches.
+        """
+        if not self.is_configured:
+            # Mock mode implementation
+            old_uid = None
+            for uid, u in self._mock_users.items():
+                if u["email"].lower() == email.lower() and uid != new_uuid:
+                    old_uid = uid
+                    break
+            
+            if old_uid:
+                user_data = self._mock_users.pop(old_uid)
+                user_data["id"] = new_uuid
+                self._mock_users[new_uuid] = user_data
+                
+                # Migrate mock resumes
+                for resume in self._mock_resumes.values():
+                    if resume.get("user_id") == old_uid:
+                        resume["user_id"] = new_uuid
+            return self._mock_users.get(new_uuid)
+
+        try:
+            # Query if user exists with the matching email
+            response = self.client.table("users").select("*").eq("email", email).execute()
+            if response.data and len(response.data) > 0:
+                old_user = response.data[0]
+                old_uuid = old_user["id"]
+                if old_uuid != new_uuid:
+                    print(f"Migrating user {email} from old UUID {old_uuid} to new UUID {new_uuid}...")
+                    
+                    # 1. Update resumes user_id first
+                    self.client.table("resumes").update({"user_id": new_uuid}).eq("user_id", old_uuid).execute()
+                    
+                    # 2. Update users id
+                    self.client.table("users").update({"id": new_uuid}).eq("id", old_uuid).execute()
+                    
+                response = self.client.table("users").select("*").eq("id", new_uuid).execute()
+                return response.data[0] if response.data else None
+            return None
+        except Exception as e:
+            print(f"Warning: Failed to migrate user UUID by email: {str(e)}")
+            return None
+
 
 
     def update_user_plan(self, user_uuid: str, plan: str) -> dict | None:

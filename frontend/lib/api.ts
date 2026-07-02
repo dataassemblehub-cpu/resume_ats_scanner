@@ -254,21 +254,7 @@ export async function getAIRecommendations(
 // ==========================================
 // AUTHENTICATION SERVICES
 // ==========================================
-export async function registerUser(email: string, password: string): Promise<any> {
-  return postJSON('/auth/register', { email, password });
-}
-
-export async function loginUser(email: string, password: string): Promise<{ access_token: string, token_type: string, user: any }> {
-  return postJSON('/auth/login', { email, password });
-}
-
-export async function forgotPassword(email: string): Promise<{ status: string, message: string, debug_token?: string }> {
-  return postJSON('/auth/forgot-password', { email });
-}
-
-export async function resetPassword(email: string, token: string, newPassword: string): Promise<{ status: string, message: string }> {
-  return postJSON('/auth/reset-password', { email, token, new_password: newPassword });
-}
+// Authentication services are now handled directly by the frontend Supabase client.
 
 export async function getUserProfile(): Promise<UserProfile> {
   return getJSON('/user/profile');

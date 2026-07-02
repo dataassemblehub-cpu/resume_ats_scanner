@@ -83,8 +83,7 @@ class SupabaseService:
                 "email": target_email,
                 "subscription_plan": "free",
                 "ai_generation_count": 0,
-                "last_ai_generation_at": None,
-                "password_hash": None
+                "last_ai_generation_at": None
             }
             return new_id
 
@@ -120,60 +119,7 @@ class SupabaseService:
             print(f"Warning: Failed to fetch user by UUID: {str(e)}")
             return None
 
-    def get_user_by_email(self, email: str) -> dict | None:
-        """
-        Retrieves user database record by Email.
-        """
-        if not self.is_configured:
-            for user in self._mock_users.values():
-                if user["email"].lower() == email.lower():
-                    return user
-            return None
 
-        try:
-            response = self.client.table("users").select("*").eq("email", email).execute()
-            return response.data[0] if response.data else None
-        except Exception as e:
-            print(f"Warning: Failed to fetch user by Email: {str(e)}")
-            return None
-
-    def create_user_with_hash(self, email: str, password_hash: str) -> dict:
-        """
-        Signs up a new user with password credentials.
-        """
-        if not self.is_configured:
-            # Check unique constraint
-            if self.get_user_by_email(email):
-                raise ValueError("A user with this email address already exists.")
-            
-            new_id = str(uuid.uuid4())
-            new_user = {
-                "id": new_id,
-                "email": email,
-                "subscription_plan": "free",
-                "ai_generation_count": 0,
-                "last_ai_generation_at": None,
-                "password_hash": password_hash
-            }
-            self._mock_users[new_id] = new_user
-            return new_user
-
-        try:
-            if self.get_user_by_email(email):
-                raise ValueError("A user with this email address already exists.")
-                
-            payload = {
-                "email": email,
-                "password_hash": password_hash,
-                "subscription_plan": "free",
-                "ai_generation_count": 0
-            }
-            response = self.client.table("users").insert(payload).execute()
-            if response.data:
-                return response.data[0]
-            raise RuntimeError("Database error creating user credentials.")
-        except Exception as e:
-            raise RuntimeError(str(e))
 
     def update_user_plan(self, user_uuid: str, plan: str) -> dict | None:
         """
@@ -425,21 +371,3 @@ class SupabaseService:
         except Exception as e:
             print(f"Warning: Failed to upload file to storage: {str(e)}")
             return None
-
-    def update_user_password(self, email: str, new_password_hash: str) -> bool:
-        """
-        Updates user password hash in the database.
-        """
-        if not self.is_configured:
-            # Update mock database
-            user = self.get_user_by_email(email)
-            if user:
-                user["password_hash"] = new_password_hash
-                return True
-            return False
-
-        try:
-            response = self.client.table("users").update({"password_hash": new_password_hash}).eq("email", email).execute()
-            return len(response.data) > 0 if response.data else False
-        except Exception as e:
-            raise RuntimeError(f"Database error during password update: {str(e)}")

@@ -36,7 +36,6 @@ def init_db():
         try:
             with engine.connect() as conn:
                 from sqlalchemy import text
-                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR(50) DEFAULT 'free';"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_generation_count INTEGER DEFAULT 0;"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_ai_generation_at TIMESTAMP;"))

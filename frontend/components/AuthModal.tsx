@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
-import { forgotPassword, resetPassword } from '@/lib/api';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -11,29 +10,35 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
-  const { login, register } = useAuth();
+  const { login, register, recoveryMode, setRecoveryMode, requestPasswordReset, updatePassword } = useAuth();
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot' | 'reset'>(initialTab);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [resetToken, setResetToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [debugToken, setDebugToken] = useState<string | null>(null);
+
+  // Automatically switch tab to 'reset' when recoveryMode becomes active
+  useEffect(() => {
+    if (recoveryMode) {
+      setActiveTab('reset');
+    }
+  }, [recoveryMode]);
 
   if (!isOpen) return null;
 
   const clearForm = () => {
     setEmail('');
     setPassword('');
-    setResetToken('');
     setError(null);
     setSuccessMessage(null);
-    setDebugToken(null);
   };
 
   const handleClose = () => {
     clearForm();
+    if (recoveryMode) {
+      setRecoveryMode(false);
+    }
     onClose();
   };
 
@@ -51,22 +56,16 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
       } else if (activeTab === 'register') {
         await register(email, password);
         clearForm();
-        onClose();
+        setSuccessMessage('Registration successful! Please check your email for a verification link or sign in.');
+        setActiveTab('login');
       } else if (activeTab === 'forgot') {
-        const res = await forgotPassword(email);
-        setSuccessMessage('A password reset verification code has been dispatched.');
-        if (res.debug_token) {
-          setDebugToken(res.debug_token);
-        }
-        // Clear inputs after clicking forgot password send button
+        await requestPasswordReset(email);
+        setSuccessMessage('A password recovery link has been sent to your email. Click it to update your password.');
         setEmail('');
-        setPassword('');
-        setResetToken('');
-        setActiveTab('reset');
       } else if (activeTab === 'reset') {
-        await resetPassword(email, resetToken, password);
+        await updatePassword(password);
         clearForm();
-        setSuccessMessage('Password reset successful! Please sign in with your new credentials.');
+        setSuccessMessage('Password reset successful! Your password has been updated.');
         setActiveTab('login');
       }
     } catch (err: any) {
@@ -102,13 +101,13 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
             {activeTab === 'login' && 'Welcome Back'}
             {activeTab === 'register' && 'Create Account'}
             {activeTab === 'forgot' && 'Reset Password'}
-            {activeTab === 'reset' && 'Enter Reset Code'}
+            {activeTab === 'reset' && 'Configure New Password'}
           </h2>
           <p className="text-xs text-gray-400 mt-1">
             {activeTab === 'login' && 'Sign in to access resume history and AI recommendations'}
             {activeTab === 'register' && 'Join to scan resumes and unlock professional suggestions'}
-            {activeTab === 'forgot' && 'Request a verification token to update your password'}
-            {activeTab === 'reset' && 'Provide the code sent to your email to configure new password'}
+            {activeTab === 'forgot' && 'Request a password recovery link sent directly to your email'}
+            {activeTab === 'reset' && 'Provide your new password to secure your account'}
           </p>
         </div>
 
@@ -153,14 +152,6 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
           </div>
         )}
 
-        {/* Debug Token Alert (For developer testing convenience) */}
-        {debugToken && (
-          <div className="p-3 text-xs bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg flex flex-col gap-1">
-            <span className="font-bold">🧪 Debug Simulator Token:</span>
-            <span className="font-mono text-white select-all bg-black/40 px-2 py-1 rounded mt-0.5">{debugToken}</span>
-          </div>
-        )}
-
         {/* Error Message */}
         {error && (
           <div className="p-3 text-xs bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg">
@@ -171,33 +162,18 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
         {/* Auth Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           
-          {/* Email Address Input */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-              Email Address
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@domain.com"
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
-            />
-          </div>
-
-          {/* Token Input (Only for Reset Password Tab) */}
-          {activeTab === 'reset' && (
+          {/* Email Address Input (Only if not in Reset tab) */}
+          {activeTab !== 'reset' && (
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                Reset Verification Code / Token
+                Email Address
               </label>
               <input
-                type="text"
+                type="email"
                 required
-                value={resetToken}
-                onChange={(e) => setResetToken(e.target.value)}
-                placeholder="mock-reset-XXXX"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@domain.com"
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
               />
             </div>
@@ -248,7 +224,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
               <span>
                 {activeTab === 'login' && 'Sign In'}
                 {activeTab === 'register' && 'Register'}
-                {activeTab === 'forgot' && 'Send Reset Code'}
+                {activeTab === 'forgot' && 'Send Reset Link'}
                 {activeTab === 'reset' && 'Reset Password'}
               </span>
             )}

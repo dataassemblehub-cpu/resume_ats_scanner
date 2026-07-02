@@ -1,15 +1,20 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { UserProfile, registerUser, loginUser, getUserProfile, upgradeUserProfile } from './api';
+import { UserProfile, getUserProfile, upgradeUserProfile } from './api';
+import { supabase } from './supabaseClient';
 
 interface AuthContextType {
   user: UserProfile | null;
   token: string | null;
   loading: boolean;
+  recoveryMode: boolean;
+  setRecoveryMode: (val: boolean) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   upgradeAccount: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -20,39 +25,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recoveryMode, setRecoveryMode] = useState(false);
 
-  // Load session from localStorage on mount
+  // Sync Supabase session state on mount and listen to changes
   useEffect(() => {
-    async function loadSession() {
-      const storedToken = localStorage.getItem('ats_auth_token');
-      if (storedToken) {
-        setToken(storedToken);
-        try {
-          const profile = await getUserProfile();
-          setUser(profile);
-        } catch (err) {
-          console.error('Failed to restore auth session:', err);
-          // Token expired or invalid
-          localStorage.removeItem('ats_auth_token');
-          setToken(null);
+    async function initSession() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          localStorage.setItem('ats_auth_token', session.access_token);
+          setToken(session.access_token);
+          try {
+            const profile = await getUserProfile();
+            setUser(profile);
+          } catch (err) {
+            console.error('Failed to retrieve user profile:', err);
+          }
         }
+      } catch (err) {
+        console.error('Failed to initialize session:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
-    loadSession();
+
+    initSession();
+
+    // Listen to changes in auth state
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        localStorage.setItem('ats_auth_token', session.access_token);
+        setToken(session.access_token);
+
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+          try {
+            const profile = await getUserProfile();
+            setUser(profile);
+          } catch (err) {
+            console.error('Failed to refresh user profile on auth change:', err);
+          }
+        }
+      } else {
+        localStorage.removeItem('ats_auth_token');
+        setToken(null);
+        setUser(null);
+        setRecoveryMode(false);
+      }
+
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecoveryMode(true);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const res = await loginUser(email, password);
-      localStorage.setItem('ats_auth_token', res.access_token);
-      setToken(res.access_token);
-      
-      const profile = await getUserProfile();
-      setUser(profile);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } catch (err) {
-      logout();
+      await logout();
       throw err;
     } finally {
       setLoading(false);
@@ -62,20 +98,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (email: string, password: string) => {
     setLoading(true);
     try {
-      await registerUser(email, password);
-      // Automatically log in after registration
-      await login(email, password);
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
     } catch (err) {
       setLoading(false);
       throw err;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('ats_auth_token');
-    setToken(null);
-    setUser(null);
-    setLoading(false);
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Sign out error:', err);
+    } finally {
+      localStorage.removeItem('ats_auth_token');
+      setToken(null);
+      setUser(null);
+      setRecoveryMode(false);
+      setLoading(false);
+    }
+  };
+
+  const requestPasswordReset = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/`,
+    });
+    if (error) throw error;
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+    setRecoveryMode(false);
   };
 
   const upgradeAccount = async () => {
@@ -100,7 +156,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, upgradeAccount, refreshProfile }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      loading, 
+      recoveryMode, 
+      setRecoveryMode, 
+      login, 
+      register, 
+      logout, 
+      requestPasswordReset, 
+      updatePassword, 
+      upgradeAccount, 
+      refreshProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   );

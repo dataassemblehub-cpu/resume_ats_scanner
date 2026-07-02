@@ -20,8 +20,7 @@ def setup_mock_db():
         "email": "test@example.com",
         "subscription_plan": "free",
         "ai_generation_count": 0,
-        "last_ai_generation_at": None,
-        "password_hash": None
+        "last_ai_generation_at": None
     }
     
     # Store initial settings
@@ -40,28 +39,9 @@ def setup_mock_db():
     settings.BYPASS_PREMIUM = orig_bypass_premium
     settings.ENV = orig_env
 
-def test_auth_registration_and_login():
-    # 1. Register a new user
-    reg_data = {"email": "candidate@example.com", "password": "securepassword123"}
-    reg_res = client.post("/auth/register", json=reg_data)
-    assert reg_res.status_code == 200
-    assert reg_res.json()["email"] == "candidate@example.com"
-    assert reg_res.json()["subscription_plan"] == "free"
-
-    # 2. Registering duplicate user fails
-    dup_res = client.post("/auth/register", json=reg_data)
-    assert dup_res.status_code == 400
-    assert "already exists" in dup_res.json()["detail"]
-
-    # 3. Log in user
-    login_res = client.post("/auth/login", json=reg_data)
-    assert login_res.status_code == 200
-    assert "access_token" in login_res.json()
-    assert login_res.json()["token_type"] == "bearer"
-    token = login_res.json()["access_token"]
-
-    # 4. Access protected profile route
-    headers = {"Authorization": f"Bearer {token}"}
+def test_mock_jwt_profile_access():
+    # Access profile route using a mock token (mock-token-candidate@example.com)
+    headers = {"Authorization": "Bearer mock-token-candidate@example.com"}
     profile_res = client.get("/user/profile", headers=headers)
     assert profile_res.status_code == 200
     assert profile_res.json()["email"] == "candidate@example.com"
@@ -89,11 +69,7 @@ def test_entitlements_service():
     assert EntitlementService.can_export_report(premium_user) is True
 
 def test_upgrade_locked_outside_development():
-    # Sign up & login
-    reg_data = {"email": "candidate@example.com", "password": "password"}
-    client.post("/auth/register", json=reg_data)
-    token = client.post("/auth/login", json=reg_data).json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = {"Authorization": "Bearer mock-token-candidate@example.com"}
 
     # Set ENV to production
     settings.ENV = "production"
@@ -146,34 +122,3 @@ def test_paginated_history():
     data2 = history_res2.json()
     assert len(data2["items"]) == 5
     assert data2["page"] == 2
-
-def test_forgot_and_reset_password_flow():
-    # 1. Register a user
-    reg_data = {"email": "reset-test@example.com", "password": "oldpassword123"}
-    client.post("/auth/register", json=reg_data)
-    
-    # 2. Request forgot password
-    forgot_res = client.post("/auth/forgot-password", json={"email": "reset-test@example.com"})
-    assert forgot_res.status_code == 200
-    assert "debug_token" in forgot_res.json()
-    token = forgot_res.json()["debug_token"]
-    
-    # 3. Reset password using token
-    reset_payload = {
-        "email": "reset-test@example.com",
-        "token": token,
-        "new_password": "newpassword123"
-    }
-    reset_res = client.post("/auth/reset-password", json=reset_payload)
-    assert reset_res.status_code == 200
-    assert "successfully updated" in reset_res.json()["message"]
-    
-    # 4. Attempt login with old password fails
-    login_fail = client.post("/auth/login", json={"email": "reset-test@example.com", "password": "oldpassword123"})
-    assert login_fail.status_code == 401
-    
-    # 5. Login with new password succeeds
-    login_success = client.post("/auth/login", json={"email": "reset-test@example.com", "password": "newpassword123"})
-    assert login_success.status_code == 200
-    assert "access_token" in login_success.json()
-

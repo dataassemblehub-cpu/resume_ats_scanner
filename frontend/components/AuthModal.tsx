@@ -1,29 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialTab?: 'login' | 'register' | 'forgot' | 'reset';
+  initialTab?: 'login' | 'register';
 }
 
 export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
-  const { login, register, recoveryMode, setRecoveryMode, requestPasswordReset, updatePassword } = useAuth();
-  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot' | 'reset'>(initialTab);
+  const { login, register } = useAuth();
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>(initialTab);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Automatically switch tab to 'reset' when recoveryMode becomes active
-  useEffect(() => {
-    if (recoveryMode) {
-      setActiveTab('reset');
-    }
-  }, [recoveryMode]);
 
   if (!isOpen) return null;
 
@@ -36,9 +29,6 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
 
   const handleClose = () => {
     clearForm();
-    if (recoveryMode) {
-      setRecoveryMode(false);
-    }
     onClose();
   };
 
@@ -56,16 +46,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
       } else if (activeTab === 'register') {
         await register(email, password);
         clearForm();
-        setSuccessMessage('Registration successful! Please check your email for a verification link or sign in.');
-        setActiveTab('login');
-      } else if (activeTab === 'forgot') {
-        await requestPasswordReset(email);
-        setSuccessMessage('A password recovery link has been sent to your email. Click it to update your password.');
-        setEmail('');
-      } else if (activeTab === 'reset') {
-        await updatePassword(password);
-        clearForm();
-        setSuccessMessage('Password reset successful! Your password has been updated.');
+        setSuccessMessage('Registration successful! Please sign in with your credentials.');
         setActiveTab('login');
       }
     } catch (err: any) {
@@ -100,50 +81,44 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
           <h2 className="text-xl font-extrabold text-white tracking-tight">
             {activeTab === 'login' && 'Welcome Back'}
             {activeTab === 'register' && 'Create Account'}
-            {activeTab === 'forgot' && 'Reset Password'}
-            {activeTab === 'reset' && 'Configure New Password'}
           </h2>
           <p className="text-xs text-gray-400 mt-1">
             {activeTab === 'login' && 'Sign in to access resume history and AI recommendations'}
             {activeTab === 'register' && 'Join to scan resumes and unlock professional suggestions'}
-            {activeTab === 'forgot' && 'Request a password recovery link sent directly to your email'}
-            {activeTab === 'reset' && 'Provide your new password to secure your account'}
           </p>
         </div>
 
-        {/* Tab Toggle (Only for Login & Register) */}
-        {(activeTab === 'login' || activeTab === 'register') && (
-          <div className="flex bg-white/5 border border-white/5 rounded-xl p-1">
-            <button
-              type="button"
-              onClick={() => {
-                clearForm();
-                setActiveTab('login');
-              }}
-              className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
-                activeTab === 'login'
-                  ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                clearForm();
-                setActiveTab('register');
-              }}
-              className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
-                activeTab === 'register'
-                  ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Register
-            </button>
-          </div>
-        )}
+        {/* Tab Toggle (Login & Register) */}
+        <div className="flex bg-white/5 border border-white/5 rounded-xl p-1">
+          <button
+            type="button"
+            onClick={() => {
+              clearForm();
+              setActiveTab('login');
+            }}
+            className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
+              activeTab === 'login'
+                ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              clearForm();
+              setActiveTab('register');
+            }}
+            className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
+              activeTab === 'register'
+                ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Register
+          </button>
+        </div>
 
         {/* Success Message */}
         {successMessage && (
@@ -162,53 +137,35 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
         {/* Auth Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           
-          {/* Email Address Input (Only if not in Reset tab) */}
-          {activeTab !== 'reset' && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                Email Address
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@domain.com"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
-              />
-            </div>
-          )}
+          {/* Email Address Input */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              Email Address
+            </label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@domain.com"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
+            />
+          </div>
 
-          {/* Password Input (Login, Register, and Reset tabs) */}
-          {activeTab !== 'forgot' && (
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  {activeTab === 'reset' ? 'New Password' : 'Password'}
-                </label>
-                {activeTab === 'login' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      clearForm();
-                      setActiveTab('forgot');
-                    }}
-                    className="text-[10px] font-bold text-sky-400 hover:text-sky-300 transition-colors"
-                  >
-                    Forgot password?
-                  </button>
-                )}
-              </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
-              />
-            </div>
-          )}
+          {/* Password Input */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              Password
+            </label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
+            />
+          </div>
 
           <button
             type="submit"
@@ -224,25 +181,10 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
               <span>
                 {activeTab === 'login' && 'Sign In'}
                 {activeTab === 'register' && 'Register'}
-                {activeTab === 'forgot' && 'Send Reset Link'}
-                {activeTab === 'reset' && 'Reset Password'}
               </span>
             )}
           </button>
         </form>
-
-        {/* Back Link for reset/forgot tabs */}
-        {(activeTab === 'forgot' || activeTab === 'reset') && (
-          <button
-            onClick={() => {
-              clearForm();
-              setActiveTab('login');
-            }}
-            className="text-center text-xs font-bold text-gray-400 hover:text-white transition-colors mt-2 cursor-pointer"
-          >
-            ← Back to Sign In
-          </button>
-        )}
       </div>
     </div>
   );

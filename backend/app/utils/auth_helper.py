@@ -1,5 +1,60 @@
+import os
+import hashlib
+import hmac
+import base64
+import json
+import time
 from fastapi import Header, HTTPException, Depends
 from app.config import settings
+
+# Global reference to secret key
+SECRET_KEY = settings.SUPABASE_KEY or "ats-secret-key-fallback-12345"
+
+def verify_jwt(token: str) -> dict | None:
+    """
+    Decodes and verifies signature of local JWT tokens signed with SECRET_KEY.
+    """
+    if not token or token.count(".") != 2:
+        return None
+    try:
+        header_b64, payload_b64, sig_b64 = token.split(".")
+        
+        # Verify signature
+        signing_input = f"{header_b64}.{payload_b64}".encode('utf-8')
+        sig = hmac.new(SECRET_KEY.encode('utf-8'), signing_input, hashlib.sha256).digest()
+        expected_sig_b64 = base64.urlsafe_b64encode(sig).decode('utf-8').rstrip('=')
+        
+        if not hmac.compare_digest(sig_b64, expected_sig_b64):
+            return None
+            
+        # Decode payload
+        padding = "=" * (4 - len(payload_b64) % 4)
+        payload_data = json.loads(base64.urlsafe_b64decode(payload_b64 + padding).decode('utf-8'))
+        
+        # Verify expiration
+        if payload_data.get("exp", 0) < time.time():
+            return None
+            
+        return payload_data
+    except Exception:
+        return None
+
+def hash_password(password: str) -> str:
+    """
+    PBKDF2 SHA-256 password hashing with constant salt.
+    Guarantees OS-independent execution without external package compiles.
+    """
+    salt = b"ats_password_salt_constant"
+    pw_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000)
+    return base64.b64encode(pw_hash).decode("utf-8")
+
+def verify_password(password: str, hashed: str) -> bool:
+    """
+    Verifies a password against its PBKDF2 hash.
+    """
+    if not hashed:
+        return False
+    return hmac.compare_digest(hash_password(password), hashed)
 
 async def get_current_user(authorization: str | None = Header(None)) -> dict:
     """
@@ -27,6 +82,21 @@ async def get_current_user(authorization: str | None = Header(None)) -> dict:
         )
 
     token = authorization.split(" ")[1]
+
+    # 1.5. Local JWT signature verification first
+    local_payload = verify_jwt(token)
+    if local_payload and "sub" in local_payload:
+        user_uuid = local_payload["sub"]
+        user_profile = supabase_service.get_user_by_uuid(user_uuid)
+        if not user_profile:
+            raise HTTPException(
+                status_code=401,
+                detail="User session expired or user profile not found."
+            )
+        # Override to premium if bypass is enabled in non-production environments
+        if settings.BYPASS_PREMIUM and settings.ENV != "production":
+            user_profile["subscription_plan"] = "premium"
+        return user_profile
 
     # 2. Mock mode verification fallback when Supabase is not configured
     if not supabase_service.is_configured:
@@ -67,6 +137,7 @@ async def get_current_user(authorization: str | None = Header(None)) -> dict:
         # Retrieve user database profile to fetch plan, counts, etc.
         user_profile = supabase_service.get_user_by_uuid(user_uuid)
         if not user_profile:
+            # Try migrating by email if profile exists under a different UUID
             user_profile = supabase_service.migrate_user_uuid_by_email(email, user_uuid)
             
         if not user_profile:

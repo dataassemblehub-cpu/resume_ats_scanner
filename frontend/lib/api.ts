@@ -254,7 +254,13 @@ export async function getAIRecommendations(
 // ==========================================
 // AUTHENTICATION SERVICES
 // ==========================================
-// Authentication services are now handled directly by the frontend Supabase client.
+export async function registerUser(email: string, password: string): Promise<any> {
+  return postJSON('/auth/register', { email, password });
+}
+
+export async function loginUser(email: string, password: string): Promise<{ access_token: string, token_type: string, user: any }> {
+  return postJSON('/auth/login', { email, password });
+}
 
 export async function getUserProfile(): Promise<UserProfile> {
   return getJSON('/user/profile');

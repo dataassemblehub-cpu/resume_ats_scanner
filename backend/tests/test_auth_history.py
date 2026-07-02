@@ -20,7 +20,8 @@ def setup_mock_db():
         "email": "test@example.com",
         "subscription_plan": "free",
         "ai_generation_count": 0,
-        "last_ai_generation_at": None
+        "last_ai_generation_at": None,
+        "password_hash": None
     }
     
     # Store initial settings
@@ -39,9 +40,28 @@ def setup_mock_db():
     settings.BYPASS_PREMIUM = orig_bypass_premium
     settings.ENV = orig_env
 
-def test_mock_jwt_profile_access():
-    # Access profile route using a mock token (mock-token-candidate@example.com)
-    headers = {"Authorization": "Bearer mock-token-candidate@example.com"}
+def test_auth_registration_and_login():
+    # 1. Register a new user
+    reg_data = {"email": "candidate@example.com", "password": "securepassword123"}
+    reg_res = client.post("/auth/register", json=reg_data)
+    assert reg_res.status_code == 200
+    assert reg_res.json()["email"] == "candidate@example.com"
+    assert reg_res.json()["subscription_plan"] == "free"
+
+    # 2. Registering duplicate user fails
+    dup_res = client.post("/auth/register", json=reg_data)
+    assert dup_res.status_code == 400
+    assert "already exists" in dup_res.json()["detail"]
+
+    # 3. Log in user
+    login_res = client.post("/auth/login", json=reg_data)
+    assert login_res.status_code == 200
+    assert "access_token" in login_res.json()
+    assert login_res.json()["token_type"] == "bearer"
+    token = login_res.json()["access_token"]
+
+    # 4. Access protected profile route
+    headers = {"Authorization": f"Bearer {token}"}
     profile_res = client.get("/user/profile", headers=headers)
     assert profile_res.status_code == 200
     assert profile_res.json()["email"] == "candidate@example.com"
@@ -69,7 +89,11 @@ def test_entitlements_service():
     assert EntitlementService.can_export_report(premium_user) is True
 
 def test_upgrade_locked_outside_development():
-    headers = {"Authorization": "Bearer mock-token-candidate@example.com"}
+    # Sign up & login
+    reg_data = {"email": "candidate@example.com", "password": "password"}
+    client.post("/auth/register", json=reg_data)
+    token = client.post("/auth/login", json=reg_data).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
 
     # Set ENV to production
     settings.ENV = "production"

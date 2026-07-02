@@ -83,7 +83,8 @@ class SupabaseService:
                 "email": target_email,
                 "subscription_plan": "free",
                 "ai_generation_count": 0,
-                "last_ai_generation_at": None
+                "last_ai_generation_at": None,
+                "password_hash": None
             }
             return new_id
 
@@ -118,6 +119,61 @@ class SupabaseService:
         except Exception as e:
             print(f"Warning: Failed to fetch user by UUID: {str(e)}")
             return None
+
+    def get_user_by_email(self, email: str) -> dict | None:
+        """
+        Retrieves user database record by Email.
+        """
+        if not self.is_configured:
+            for user in self._mock_users.values():
+                if user["email"].lower() == email.lower():
+                    return user
+            return None
+
+        try:
+            response = self.client.table("users").select("*").eq("email", email).execute()
+            return response.data[0] if response.data else None
+        except Exception as e:
+            print(f"Warning: Failed to fetch user by Email: {str(e)}")
+            return None
+
+    def create_user_with_hash(self, email: str, password_hash: str) -> dict:
+        """
+        Signs up a new user with password credentials.
+        """
+        if not self.is_configured:
+            # Check unique constraint
+            if self.get_user_by_email(email):
+                raise ValueError("A user with this email address already exists.")
+            
+            new_id = str(uuid.uuid4())
+            new_user = {
+                "id": new_id,
+                "email": email,
+                "subscription_plan": "free",
+                "ai_generation_count": 0,
+                "last_ai_generation_at": None,
+                "password_hash": password_hash
+            }
+            self._mock_users[new_id] = new_user
+            return new_user
+
+        try:
+            if self.get_user_by_email(email):
+                raise ValueError("A user with this email address already exists.")
+                
+            payload = {
+                "email": email,
+                "password_hash": password_hash,
+                "subscription_plan": "free",
+                "ai_generation_count": 0
+            }
+            response = self.client.table("users").insert(payload).execute()
+            if response.data:
+                return response.data[0]
+            raise RuntimeError("Database error creating user credentials.")
+        except Exception as e:
+            raise RuntimeError(str(e))
 
     def migrate_user_uuid_by_email(self, email: str, new_uuid: str) -> dict | None:
         """

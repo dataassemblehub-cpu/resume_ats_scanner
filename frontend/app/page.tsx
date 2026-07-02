@@ -12,16 +12,9 @@ type AppState = 'idle' | 'scanning' | 'success' | 'error';
 export type TabType = 'overview' | 'keywords' | 'formatting' | 'ai-suggestions' | 'history' | 'exports';
 
 export default function Home() {
-  const { user, logout, recoveryMode } = useAuth();
+  const { user, logout } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [state, setState] = useState<AppState>('idle');
-
-  // Automatically open AuthModal when recovery link is clicked
-  useEffect(() => {
-    if (recoveryMode) {
-      setAuthModalOpen(true);
-    }
-  }, [recoveryMode]);
   const [errorMessage, setErrorMessage] = useState('');
   const [analysisResult, setAnalysisResult] = useState<ComprehensiveAnalysisResult | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('overview');

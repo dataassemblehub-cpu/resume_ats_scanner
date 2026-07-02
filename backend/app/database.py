@@ -36,10 +36,14 @@ def init_db():
         try:
             with engine.connect() as conn:
                 from sqlalchemy import text
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR(50) DEFAULT 'free';"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_generation_count INTEGER DEFAULT 0;"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_ai_generation_at TIMESTAMP;"))
                 conn.execute(text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS jd_text TEXT;"))
                 conn.execute(text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS recommendations JSONB;"))
                 conn.commit()
-                logger.info("Database migration check: successfully ensured 'jd_text' and 'recommendations' columns exist.")
+                logger.info("Database migration check: successfully ensured new auth, plans, and recommendations columns exist.")
         except Exception as alt_err:
             logger.warning(f"Could not check or run table migrations: {str(alt_err)}")
             

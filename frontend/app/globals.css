@@ -151,3 +151,133 @@
   stroke-dashoffset: 20;
   animation: checkmark-draw 0.3s forwards ease-in-out;
 }
+
+/* Premium Glow Cards */
+.glow-card-violet:hover {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.glow-card-sky:hover {
+  box-shadow: 0 0 30px rgba(14, 165, 233, 0.15);
+  border-color: rgba(14, 165, 233, 0.3);
+}
+
+.glow-card-teal:hover {
+  box-shadow: 0 0 30px rgba(20, 184, 166, 0.15);
+  border-color: rgba(20, 184, 166, 0.3);
+}
+
+.glow-card-amber:hover {
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Shimmer Loading Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-bg {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Ambient Floating Glow Blobs */
+@keyframes float-blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.08);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.96);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: float-blob 12s infinite ease-in-out;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2.5s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 5s;
+}
+
+/* Sidebar Tab highlights */
+.sidebar-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sidebar-button:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sidebar-button.active {
+  color: var(--accent-blue);
+  background: rgba(14, 165, 233, 0.08);
+  border-color: rgba(14, 165, 233, 0.15);
+  box-shadow: inset 0 0 12px rgba(14, 165, 233, 0.05);
+}
+
+/* Mobile Bottom Tab bar button */
+.mobile-nav-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.mobile-nav-button.active {
+  color: var(--accent-blue);
+}
+

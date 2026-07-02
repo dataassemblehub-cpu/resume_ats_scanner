@@ -63,6 +63,24 @@ This document summarizes the development activities performed phase-wise for the
 * **Future feature placeholders**: Designed placeholders for scan history, AI recommendations, and export endpoints.
 * **CORS Patch**: Patched backend CORS middleware configurations by setting `allow_credentials=False` to resolve browser wildcard conflicts.
 
+### Phase 9: Gemini AI Recommendations Integration
+* **Gemini LLM Pipeline**: Integrated Google Gemini API to analyze parsed resume text against JD requirements.
+* **Resume Summary**: Generates a professional overview of the candidate's fit.
+* **Key Strengths & Weaknesses**: Extracts highlights and critical warnings for the profile.
+* **Actionable Bullet Rewrites**: Provides optimized experience bullet points with impact categories (High/Medium/Low) and structured explanations.
+* **ATS & Recruiter Tips**: Suggests formatting and resume structure improvements.
+* **Frontend Suggestions Tab**: Integrated suggestions tab in the dashboard with copy-to-clipboard functionality.
+
+### Phase 10: Auth, History, Premium Gating & PDF Export
+* **Unified Authentication**: Integrated Supabase Auth with database-backed session token verification (bearer token verification via custom `verify_jwt` utility and fallback to Supabase GoTrue API).
+* **Password Recovery**: Implemented email-based forgot and reset password flows on both backend and frontend (with automated form clearing on transitions).
+* **Centralized Entitlements**: Created `EntitlementService` to enforce subscription checks (free users get 1 scan, premium users get unlimited scans, locked export/copy features).
+* **Scan History**: Built a paginated scan history dashboard with loading, caching, and record deletion.
+* **Print-Optimized PDF Export**: Added `/export/[id]` preview page with A4 margins, print-friendly typography, a privacy toggle (hide personal contact details), and an option to auto-trigger the print utility.
+* **Self-Healing Storage**: Added auto-verification and creation of the `"resumes"` storage bucket on backend startup.
+* **UX Refinements**: Redesigned the scan history refresh button with loading spinners, page bounds safety (automatic fallback to page 1), and toast notifications.
+
 ---
 
-*Status: All frontend files compile type-safely and backend tests are passing successfully.*
+*Status: All frontend files compile type-safely, backend tests are passing successfully, and self-healing storage bucket initialization is active on startup.*
+

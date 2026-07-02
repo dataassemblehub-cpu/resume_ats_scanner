@@ -22,6 +22,8 @@ class ScoreService:
             raise ValueError("Resume text cannot be empty.")
         if not j_text:
             raise ValueError("Job description text cannot be empty.")
+        if r_text == j_text:
+            raise ValueError("Resume and Job Description cannot be identical.")
 
         # 1. Segment resume sections
         sections = self.section_analyzer.analyze(r_text)

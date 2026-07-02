@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "../lib/auth";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -19,7 +20,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${outfit.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }
+

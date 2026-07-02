@@ -1,25 +1,47 @@
 'use client';
 
-import React from 'react';
-import { AIRecommendationsResult } from '@/lib/api';
+import React, { useState } from 'react';
+import { AIRecommendationsResult, KeywordResult } from '@/lib/api';
+import { useEntitlements } from '@/lib/auth';
 
 interface SuggestionsSectionProps {
   recommendations?: AIRecommendationsResult;
+  onRecalculate: (newResumeText: string) => void;
+  resumeText: string;
+  keywords: KeywordResult;
+  onRegenerateSuggestions: (newResumeText: string) => Promise<void>;
+  isGenerating: boolean;
 }
 
-export default function SuggestionsSection({ recommendations }: SuggestionsSectionProps) {
-  // Graceful handling of missing or unavailable state
+export default function SuggestionsSection({
+  recommendations,
+  onRecalculate,
+  resumeText,
+  keywords,
+  onRegenerateSuggestions,
+  isGenerating
+}: SuggestionsSectionProps) {
+  const { canCopySuggestions, canGenerateAI } = useEntitlements();
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [copiedSkills, setCopiedSkills] = useState<string | null>(null);
+
+  // Toast Helper
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // Graceful Handling of Offline State
   if (!recommendations || recommendations.status === 'unavailable') {
     return (
       <div className="glass-panel p-10 flex flex-col items-center justify-center text-center gap-6 relative overflow-hidden min-h-[400px] border-l-4 border-l-amber-500">
         <div className="absolute w-[200px] h-[200px] bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-full blur-[45px] pointer-events-none" />
-        
-        <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative">
+        <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
           <svg className="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
-
         <div className="flex flex-col gap-2 max-w-md">
           <h3 className="text-lg font-bold text-white">AI Suggestions Offline</h3>
           <p className="text-xs text-gray-400 leading-relaxed">
@@ -42,173 +64,518 @@ export default function SuggestionsSection({ recommendations }: SuggestionsSecti
     ats_recommendations = []
   } = recommendations;
 
+  // Bullet Point parser helper
+  const parseBulletPoint = (bullet: string): { before: string | null; after: string } => {
+    const beforeAfterRegex = /(?:before|original|old):\s*(.*?)\s*(?:after|suggested|suggestion|optimized|new):\s*(.*)/i;
+    const match = bullet.match(beforeAfterRegex);
+    if (match) {
+      return {
+        before: match[1].trim(),
+        after: match[2].trim()
+      };
+    }
+
+    const arrowRegex = /^(.*?)\s*(?:->|=>|→)\s*(.*)$/;
+    const arrowMatch = bullet.match(arrowRegex);
+    if (arrowMatch) {
+      return {
+        before: arrowMatch[1].trim(),
+        after: arrowMatch[2].trim()
+      };
+    }
+
+    return {
+      before: null,
+      after: bullet.trim()
+    };
+  };
+
+  // 1. Group items into priority levels & compute counts
+  const highImpactItems: string[] = [];
+  const mediumImpactItems: string[] = [];
+  const lowImpactItems: string[] = [];
+
+  // Categorize missing skills as High Impact
+  missing_skills.forEach(skill => {
+    highImpactItems.push(`Include keyword "${skill}": Required in job description but not detected in resume.`);
+  });
+
+  // Categorize weaknesses/gaps as High/Medium Impact
+  weaknesses.forEach(gap => {
+    if (gap.toLowerCase().includes('missing') || gap.toLowerCase().includes('no ') || gap.toLowerCase().includes('lack of')) {
+      highImpactItems.push(gap);
+    } else {
+      mediumImpactItems.push(gap);
+    }
+  });
+
+  // Suggested bullets represent Medium Impact updates
+  suggested_bullet_points.forEach(bullet => {
+    const parsed = parseBulletPoint(bullet);
+    mediumImpactItems.push(`Optimize bullet point: Rephrase generic line to "${parsed.after}"`);
+  });
+
+  // Strengths represent high value positive indicators (for reference, but we focus on recommendations for impact counts)
+  // General layout advice maps to low impact / nice-to-have items
+  const allAdvice = [
+    ...ats_improvements,
+    ...ats_recommendations,
+    ...recruiter_improvements,
+    ...resume_improvements
+  ];
+  allAdvice.forEach(advice => {
+    if (advice.toLowerCase().includes('critical') || advice.toLowerCase().includes('remove')) {
+      mediumImpactItems.push(advice);
+    } else {
+      lowImpactItems.push(advice);
+    }
+  });
+
+  // Counts for summary tags
+  const highCount = highImpactItems.length;
+  const mediumCount = mediumImpactItems.length;
+  const lowCount = lowImpactItems.length;
+  const totalRecommendations = highCount + mediumCount + lowCount;
+
+  // Clipboard export builder (Consistently structured in clean Markdown)
+  const handleCopyAllSuggestions = () => {
+    let md = `# AI Resume Optimization Recommendations\n\n`;
+    md += `> *Disclaimer: Please review and verify all AI-generated suggestions for factual accuracy before updating your professional resume.*\n\n`;
+    
+    if (resume_summary) {
+      md += `## Executive Profile Summary\n${resume_summary}\n\n`;
+    }
+
+    if (missing_skills.length > 0) {
+      md += `## 🔴 High Impact: Missing Core Keywords\n`;
+      missing_skills.forEach(skill => {
+        md += `- **${skill}**: Required skill mentioned in the job description but not found in your resume.\n`;
+      });
+      md += `\n`;
+    }
+
+    if (weaknesses.length > 0) {
+      md += `## Identified Gaps & Weaknesses\n`;
+      weaknesses.forEach(gap => {
+        md += `- ${gap}\n`;
+      });
+      md += `\n`;
+    }
+
+    if (suggested_bullet_points.length > 0) {
+      md += `## 🟡 Medium Impact: Bullet Point Optimizations\n`;
+      suggested_bullet_points.forEach((bullet, idx) => {
+        const parsed = parseBulletPoint(bullet);
+        md += `### Suggestion #${idx + 1}\n`;
+        if (parsed.before) {
+          md += `- **Original**: ${parsed.before}\n`;
+        }
+        md += `- **Optimized**: ${parsed.after}\n\n`;
+      });
+    }
+
+    if (allAdvice.length > 0) {
+      md += `## 🟢 Nice to Have: Formatting & Readability Advice\n`;
+      allAdvice.forEach(advice => {
+        md += `- ${advice}\n`;
+      });
+    }
+
+    navigator.clipboard.writeText(md);
+    showToast('Copied all recommendations in Markdown format!');
+  };
+
   return (
-    <div className="flex flex-col gap-8">
-      {/* 1. Resume AI Summary */}
-      {resume_summary && (
-        <div className="glass-panel p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-500/10 to-transparent blur-2xl pointer-events-none" />
-          <h3 className="text-xs font-bold text-violet-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            AI Recruiter Executive Summary
-          </h3>
-          <p className="text-xs text-gray-300 leading-relaxed italic">
-            &ldquo;{resume_summary}&rdquo;
-          </p>
+    <div className="flex flex-col gap-6 relative">
+      
+      {/* Toast Alert overlay */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 bg-teal-600/95 text-white font-bold text-xs px-4 py-2.5 rounded-xl backdrop-blur-md border border-teal-500/20 shadow-xl shadow-teal-500/10 animate-fade-in z-50 flex items-center gap-2 select-none">
+          <svg className="w-4 h-4 text-emerald-300 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
+          </svg>
+          <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* 2. Priority Missing Skills */}
-      {missing_skills.length > 0 && (
-        <div className="glass-panel p-6">
-          <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <svg className="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Priority Skills to Add (JD Concept Gaps)
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {missing_skills.map((skill, index) => (
-              <span
-                key={index}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500/10 border border-sky-500/25 text-sky-300 shadow-sm shadow-sky-500/5 hover:bg-sky-500/15 transition-all cursor-default"
-              >
-                {skill}
-              </span>
-            ))}
+      {/* RENDER ACTIVE LOADING SKELETON SCREEN WHILE REGENERATING */}
+      {isGenerating ? (
+        <div className="glass-panel p-12 flex flex-col items-center justify-center text-center gap-6 min-h-[500px] relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-sky-500/5 shimmer-bg opacity-30" />
+          <div className="relative w-16 h-16 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
+            <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center">
+              <span className="w-2.5 h-2.5 bg-violet-400 rounded-full animate-ping" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 max-w-sm relative z-10">
+            <h3 className="text-md font-bold text-white tracking-wide animate-pulse">
+              Regenerating AI Recommendations
+            </h3>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Google Gemini is re-evaluating keyword indices, semantic matching alignments, and writing optimized bullets...
+            </p>
           </div>
         </div>
-      )}
-
-      {/* 3. Strengths and Weaknesses Split */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Strengths Card */}
-        <div className="glass-panel p-6 border-l-4 border-l-emerald-500/70 relative">
-          <div className="absolute top-4 right-4 w-12 h-12 bg-emerald-500/5 rounded-full flex items-center justify-center pointer-events-none">
-            <svg className="w-6 h-6 text-emerald-400/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+      ) : totalRecommendations === 0 ? (
+        /* POLISHED EMPTY STATE FOR PERFECT MATCHES */
+        <div className="glass-panel p-12 flex flex-col items-center justify-center text-center gap-6 min-h-[450px] border-l-4 border-l-emerald-500 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-2xl pointer-events-none" />
+          <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-4">
-            Core Match Strengths
-          </h3>
-          {strengths.length > 0 ? (
-            <ul className="flex flex-col gap-3">
-              {strengths.map((strength, index) => (
-                <li key={index} className="text-xs text-gray-300 flex items-start gap-2.5 leading-relaxed">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
-                  {strength}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-xs text-gray-500 italic">No significant strengths reported.</p>
-          )}
-        </div>
-
-        {/* Weaknesses Card */}
-        <div className="glass-panel p-6 border-l-4 border-l-rose-500/70 relative">
-          <div className="absolute top-4 right-4 w-12 h-12 bg-rose-500/5 rounded-full flex items-center justify-center pointer-events-none">
-            <svg className="w-6 h-6 text-rose-400/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+          <div className="flex flex-col gap-2 max-w-md relative z-10">
+            <h3 className="text-lg font-extrabold text-white tracking-tight">Outstanding Profile Match!</h3>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              No core technical skill gaps, formatting layout warnings, or bullet optimization warnings were detected. Your resume is extremely well-tailored for this job description requirement list.
+            </p>
           </div>
-          <h3 className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-4">
-            Identified Resume Gaps
-          </h3>
-          {weaknesses.length > 0 ? (
-            <ul className="flex flex-col gap-3">
-              {weaknesses.map((weakness, index) => (
-                <li key={index} className="text-xs text-gray-300 flex items-start gap-2.5 leading-relaxed">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400 mt-1.5 shrink-0" />
-                  {weakness}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-xs text-gray-500 italic">No critical gaps identified.</p>
-          )}
+          <button
+            onClick={() => onRegenerateSuggestions(resumeText)}
+            className="px-4 py-2 border border-white/5 bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-semibold rounded-lg transition-all"
+          >
+            Run Diagnostic Scan Again
+          </button>
         </div>
-      </div>
-
-      {/* 4. Actionable Bullet Point Suggestions */}
-      {suggested_bullet_points.length > 0 && (
-        <div className="glass-panel p-6 relative">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-teal-500/5 to-transparent blur-3xl pointer-events-none" />
-          <h3 className="text-xs font-bold text-teal-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Factual Experience Bullet Optimizations (Quantified & Actionable)
-          </h3>
-          <div className="flex flex-col gap-4">
-            {suggested_bullet_points.map((bullet, index) => (
-              <div key={index} className="flex gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
-                <span className="text-xs font-bold text-teal-400 bg-teal-500/10 w-6 h-6 rounded flex items-center justify-center shrink-0">
-                  {index + 1}
-                </span>
-                <p className="text-xs text-gray-200 leading-relaxed font-mono">
-                  {bullet}
-                </p>
+      ) : (
+        /* MAIN DASHBOARD RENDER */
+        <div className="flex flex-col gap-6">
+          
+          {/* Executive Profile Summary */}
+          {resume_summary && (
+            <div className="glass-panel p-6 relative overflow-hidden glow-card-violet shrink-0 flex flex-col gap-4">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-500/10 to-transparent blur-2xl pointer-events-none" />
+              
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded tracking-widest uppercase">
+                    ✨ AI-Generated Summary
+                  </span>
+                </div>
+                
+                {/* Export/Copy All button */}
+                <button
+                  onClick={() => {
+                    if (!canCopySuggestions) {
+                      alert('Copying all suggestions in Markdown requires Premium. Please upgrade to unlock.');
+                      return;
+                    }
+                    handleCopyAllSuggestions();
+                  }}
+                  className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5 hover:border-white/10 transition-all flex items-center gap-1.5 self-start sm:self-center"
+                >
+                  {!canCopySuggestions ? (
+                    <svg className="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  )}
+                  Copy All Suggestions
+                </button>
               </div>
-            ))}
+
+              {/* Disclaimer reminder */}
+              <div className="text-[10px] text-gray-500 italic bg-white/[0.01] border border-white/5 rounded-lg px-3 py-2 leading-relaxed">
+                ⚠️ Disclaimer: Please review and verify all AI-generated suggestions for factual accuracy before updating your professional resume.
+              </div>
+
+              <p className="text-xs text-gray-300 leading-relaxed font-sans italic border-l-2 border-violet-500/35 pl-4 py-0.5">
+                &ldquo;{resume_summary}&rdquo;
+              </p>
+            </div>
+          )}
+
+          {/* PRIORITY SUMMARY ROW */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="glass-panel p-4 flex flex-col items-center justify-center text-center gap-1 bg-rose-500/[0.02] border-rose-500/10">
+              <span className="text-[9px] font-extrabold text-rose-400 uppercase tracking-widest">🔴 High Impact</span>
+              <span className="text-xl font-bold text-white font-mono">{highCount}</span>
+              <span className="text-[8px] text-gray-500">Critical gaps to resolve</span>
+            </div>
+            
+            <div className="glass-panel p-4 flex flex-col items-center justify-center text-center gap-1 bg-amber-500/[0.02] border-amber-500/10">
+              <span className="text-[9px] font-extrabold text-amber-400 uppercase tracking-widest">🟡 Medium Impact</span>
+              <span className="text-xl font-bold text-white font-mono">{mediumCount}</span>
+              <span className="text-[8px] text-gray-500">Optimizations to apply</span>
+            </div>
+
+            <div className="glass-panel p-4 flex flex-col items-center justify-center text-center gap-1 bg-emerald-500/[0.02] border-emerald-500/10">
+              <span className="text-[9px] font-extrabold text-emerald-400 uppercase tracking-widest">🟢 Nice to Have</span>
+              <span className="text-xl font-bold text-white font-mono">{lowCount}</span>
+              <span className="text-[8px] text-gray-500">Style tips to review</span>
+            </div>
           </div>
-          <div className="mt-4 p-3 bg-teal-500/5 border border-teal-500/10 rounded-lg text-[10px] text-gray-400 leading-relaxed flex items-start gap-2">
-            <svg className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            These suggestions optimize for ATS parser keyword detection while preserving your raw metrics. You can copy-paste these drop-in replacements directly into your resume sections.
+
+          {/* STRENGTHS AND GAPS SIDE-BY-SIDE */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Strengths Card */}
+            <div className="glass-panel p-5 border-l-4 border-l-teal-500/80 relative glow-card-teal bg-[#0a0d16]/30">
+              <h3 className="text-xs font-bold text-teal-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                <span>Core Match Strengths</span>
+                <span className="text-[8px] text-gray-500">Positive indicators</span>
+              </h3>
+              {strengths.length > 0 ? (
+                <ul className="flex flex-col gap-3">
+                  {strengths.map((strength, index) => (
+                    <li key={index} className="text-xs text-gray-300 flex items-start gap-2.5 leading-relaxed">
+                      <svg className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>{strength}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-gray-500 italic">No significant strengths reported.</p>
+              )}
+            </div>
+
+            {/* Gaps / Weaknesses Card */}
+            <div className="glass-panel p-5 border-l-4 border-l-rose-500/80 relative hover:shadow-[0_0_30px_rgba(244,63,94,0.1)] transition-all bg-[#0a0d16]/30">
+              <h3 className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                <span>🔴 Critical Match Gaps</span>
+                <span className="text-[8px] text-rose-500/70 font-semibold font-mono">High Impact ({highCount})</span>
+              </h3>
+              {weaknesses.length > 0 ? (
+                <ul className="flex flex-col gap-3">
+                  {weaknesses.map((weakness, index) => (
+                    <li key={index} className="text-xs text-gray-300 flex items-start gap-2.5 leading-relaxed">
+                      <svg className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span>{weakness}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-gray-500 italic">No critical gaps identified.</p>
+              )}
+            </div>
           </div>
+
+          {/* EXPLAINABLE MISSING KEYWORDS */}
+          {missing_skills.length > 0 && (
+            <div className="glass-panel p-5 border border-white/5 relative bg-black/15 glow-card-sky">
+              <h3 className="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+                <svg className="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Missing Keywords (Click to Copy)
+              </h3>
+              <p className="text-[9px] text-gray-500 mb-3.5 leading-relaxed">
+                Evidence: These required keywords were mentioned multiple times in the job description but not detected in your resume. Click any chip to copy it.
+              </p>
+
+              <div className="flex flex-wrap gap-2.5">
+                {missing_skills.map((skill, index) => {
+                  const isCopied = copiedSkills === skill;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        navigator.clipboard.writeText(skill);
+                        setCopiedSkills(skill);
+                        setTimeout(() => setCopiedSkills(null), 2000);
+                        showToast(`Copied keyword "${skill}" to clipboard!`);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 select-none ${
+                        isCopied
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                          : 'bg-sky-500/5 hover:bg-sky-500/15 border-sky-500/20 hover:border-sky-400/40 text-sky-300 cursor-pointer active:scale-95'
+                      }`}
+                    >
+                      <span>{skill}</span>
+                      {isCopied ? (
+                        <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-3 h-3 text-sky-400/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* BEFORE / AFTER EXPERIENCE BULLET REWRITES */}
+          {suggested_bullet_points.length > 0 && (
+            <div className="glass-panel p-5 relative">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-teal-500/5 to-transparent blur-3xl pointer-events-none" />
+              
+              <h3 className="text-xs font-bold text-teal-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Experience Bullet Point Optimizations
+                </span>
+                <span className="text-[8px] text-amber-400 font-semibold font-mono">🟡 Medium Impact ({suggested_bullet_points.length})</span>
+              </h3>
+              <p className="text-[9px] text-gray-500 mb-4 leading-relaxed">
+                Evidence: Google Gemini rewrote descriptions to incorporate missing keywords naturally while preserving your raw metrics.
+              </p>
+
+              <div className="flex flex-col gap-4">
+                {suggested_bullet_points.map((rawBullet, index) => {
+                  const parsed = parseBulletPoint(rawBullet);
+                  const isCopied = copiedIndex === index;
+
+                  return (
+                    <div key={index} className="flex flex-col border border-white/5 bg-black/20 rounded-xl overflow-hidden">
+                      {/* Header bar */}
+                      <div className="flex items-center justify-between px-3.5 py-2 border-b border-white/5 bg-white/5 text-[9px] font-bold">
+                        <span className="text-teal-400">Optimization Bullet #{index + 1}</span>
+                        
+                        <button
+                          onClick={() => {
+                            if (!canCopySuggestions) {
+                              alert('Copying bullet suggestions requires Premium. Please upgrade to unlock.');
+                              return;
+                            }
+                            navigator.clipboard.writeText(parsed.after);
+                            setCopiedIndex(index);
+                            setTimeout(() => setCopiedIndex(null), 2000);
+                            showToast(`Copied bullet suggestion #${index + 1}!`);
+                          }}
+                          className="text-sky-400 hover:text-sky-300 uppercase tracking-wider flex items-center gap-1 transition-colors"
+                        >
+                          {isCopied ? (
+                            <>
+                              <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              {!canCopySuggestions ? (
+                                <svg className="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                              ) : (
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                              )}
+                              <span>Copy Suggestion</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Before / After slots */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/5 text-xs">
+                        {parsed.before ? (
+                          <div className="p-3.5 bg-rose-500/[0.01]">
+                            <span className="text-[8px] font-bold text-rose-400 uppercase tracking-wider block mb-1">Before (Original):</span>
+                            <p className="line-through decoration-rose-500/25 leading-relaxed text-gray-400 font-sans">{parsed.before}</p>
+                          </div>
+                        ) : (
+                          <div className="p-3.5 bg-black/10">
+                            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Base Context:</span>
+                            <p className="italic leading-relaxed text-gray-400 font-sans">Reference experience context parsed from original resume.</p>
+                          </div>
+                        )}
+                        <div className="p-3.5 bg-teal-500/[0.02]">
+                          <span className="text-[8px] font-bold text-teal-400 uppercase tracking-wider block mb-1">After (Suggested):</span>
+                          <p className="text-teal-300 font-mono leading-relaxed">{parsed.after}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ATS COMPATIBILITY VS RECRUITER READABILITY */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* ATS Advice */}
+            <div className="glass-panel p-5 glow-card-violet bg-[#0a0d16]/30">
+              <h3 className="text-xs font-bold text-violet-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                <span>ATS Parser Advice</span>
+                <span className="text-[8px] text-gray-500">Machine compatibility</span>
+              </h3>
+              <ul className="flex flex-col gap-3">
+                {[...ats_improvements, ...ats_recommendations].slice(0, 5).map((item, index) => (
+                  <li key={index} className="text-xs text-gray-300 flex items-start gap-2.5 leading-relaxed">
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-400 mt-1.5 shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+                {ats_improvements.length === 0 && ats_recommendations.length === 0 && (
+                  <li className="text-xs text-gray-500 italic">No structural compatibility items needed.</li>
+                )}
+              </ul>
+            </div>
+
+            {/* Recruiter Advice */}
+            <div className="glass-panel p-5 glow-card-sky bg-[#0a0d16]/30">
+              <h3 className="text-xs font-bold text-sky-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                <span>Human Recruiter Advice</span>
+                <span className="text-[8px] text-gray-500">Readability & impact</span>
+              </h3>
+              <ul className="flex flex-col gap-3">
+                {[...recruiter_improvements, ...resume_improvements].slice(0, 5).map((item, index) => (
+                  <li key={index} className="text-xs text-gray-300 flex items-start gap-2.5 leading-relaxed">
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+                {recruiter_improvements.length === 0 && resume_improvements.length === 0 && (
+                  <li className="text-xs text-gray-500 italic">No layout or readability recommendations.</li>
+                )}
+              </ul>
+            </div>
+
+          </div>
+
+          {/* Regenerate AI Suggestions block */}
+          <div className="glass-panel p-6 border border-white/5 bg-gradient-to-r from-violet-500/5 to-sky-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-6 mt-2">
+            <div className="flex flex-col gap-1 max-w-lg">
+              <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+                Regenerate AI Recommendations
+              </h4>
+              <p className="text-[10px] text-gray-400 leading-relaxed mt-1">
+                Google Gemini will re-scan the job description requirements and rewrite optimizations based on any changes you make to your files.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                if (!canGenerateAI) {
+                  alert('Regenerating recommendations requires Premium. Please upgrade to unlock.');
+                  return;
+                }
+                onRegenerateSuggestions(resumeText);
+              }}
+              disabled={isGenerating}
+              className="px-5 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 text-xs font-bold uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center gap-1.5 self-start sm:self-auto disabled:opacity-50"
+            >
+              {!canGenerateAI ? (
+                <svg className="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              )}
+              Regenerate Suggestions
+            </button>
+          </div>
+
         </div>
       )}
-
-      {/* 5. ATS & Recruiter Recommendations Lists */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* ATS Improvement Suggestions */}
-        <div className="glass-panel p-6">
-          <h3 className="text-xs font-bold text-violet-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-            ATS System Compatibility Optimizations
-          </h3>
-          <ul className="flex flex-col gap-3">
-            {[...ats_improvements, ...ats_recommendations].slice(0, 6).map((item, index) => (
-              <li key={index} className="text-xs text-gray-300 flex items-start gap-2.5 leading-relaxed">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 mt-1.5 shrink-0" />
-                {item}
-              </li>
-            ))}
-            {ats_improvements.length === 0 && ats_recommendations.length === 0 && (
-              <li className="text-xs text-gray-500 italic">No structural compatibility items needed.</li>
-            )}
-          </ul>
-        </div>
-
-        {/* Recruiter-Centric Improvements */}
-        <div className="glass-panel p-6">
-          <h3 className="text-xs font-bold text-sky-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            Human Recruiter Readability Advice
-          </h3>
-          <ul className="flex flex-col gap-3">
-            {[...recruiter_improvements, ...resume_improvements].slice(0, 6).map((item, index) => (
-              <li key={index} className="text-xs text-gray-300 flex items-start gap-2.5 leading-relaxed">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 shrink-0" />
-                {item}
-              </li>
-            ))}
-            {recruiter_improvements.length === 0 && resume_improvements.length === 0 && (
-              <li className="text-xs text-gray-500 italic">No human layout adjustments recommended.</li>
-            )}
-          </ul>
-        </div>
-      </div>
     </div>
   );
 }

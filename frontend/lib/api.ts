@@ -70,6 +70,50 @@ export interface ComprehensiveAnalysisResult {
   jdText?: string;
 }
 
+export interface Entitlements {
+  can_generate_ai: boolean;
+  can_export_report: boolean;
+  can_copy_suggestions: boolean;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  subscription_plan: 'free' | 'premium';
+  ai_generation_count: number;
+  last_ai_generation_at: string | null;
+  entitlements: Entitlements;
+}
+
+export interface HistoryItem {
+  id: string;
+  file_name: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  created_at: string;
+  has_ai_recommendations: boolean;
+}
+
+export interface HistoryListResponse {
+  items: HistoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+// Helpers for Auth Header injection
+function getAuthHeaders(): Record<string, string> {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('ats_auth_token');
+    if (token) {
+      return { 'Authorization': `Bearer ${token}` };
+    }
+  }
+  return {};
+}
+
 /**
  * Uploads a resume file to the backend.
  */
@@ -98,8 +142,43 @@ async function postJSON<T>(endpoint: string, payload: Record<string, any>): Prom
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders()
     },
     body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed request to ${endpoint}`);
+  }
+
+  return response.json();
+}
+
+async function getJSON<T>(endpoint: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders()
+    }
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed request to ${endpoint}`);
+  }
+
+  return response.json();
+}
+
+async function deleteJSON<T>(endpoint: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders()
+    }
   });
 
   if (!response.ok) {
@@ -170,4 +249,50 @@ export async function getAIRecommendations(
       ats_recommendations: [],
     };
   }
+}
+
+// ==========================================
+// AUTHENTICATION SERVICES
+// ==========================================
+export async function registerUser(email: string, password: string): Promise<any> {
+  return postJSON('/auth/register', { email, password });
+}
+
+export async function loginUser(email: string, password: string): Promise<{ access_token: string, token_type: string, user: any }> {
+  return postJSON('/auth/login', { email, password });
+}
+
+export async function forgotPassword(email: string): Promise<{ status: string, message: string, debug_token?: string }> {
+  return postJSON('/auth/forgot-password', { email });
+}
+
+export async function resetPassword(email: string, token: string, newPassword: string): Promise<{ status: string, message: string }> {
+  return postJSON('/auth/reset-password', { email, token, new_password: newPassword });
+}
+
+export async function getUserProfile(): Promise<UserProfile> {
+  return getJSON('/user/profile');
+}
+
+export async function upgradeUserProfile(): Promise<any> {
+  return postJSON('/user/upgrade', {});
+}
+
+export async function getUserUsage(): Promise<{ plan: string, ai_generation_count: number, limit: number, quota_exhausted: boolean }> {
+  return getJSON('/user/usage');
+}
+
+// ==========================================
+// HISTORY SERVICES
+// ==========================================
+export async function getUserHistory(page: number = 1, limit: number = 10): Promise<HistoryListResponse> {
+  return getJSON(`/history?page=${page}&limit=${limit}`);
+}
+
+export async function getHistoryDetail(resumeId: string): Promise<any> {
+  return getJSON(`/history/${resumeId}`);
+}
+
+export async function deleteHistoryItem(resumeId: string): Promise<{ status: string, message: string }> {
+  return deleteJSON(`/history/${resumeId}`);
 }

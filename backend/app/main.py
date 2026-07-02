@@ -2,7 +2,7 @@ import time
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.routes import resume, jd, section, keyword, score, semantic, formatting, recommendation
+from app.routes import resume, jd, section, keyword, score, semantic, formatting, recommendation, auth, user, history
 from app.config import settings
 from app.database import init_db
 from app.utils.logging_config import logger
@@ -18,6 +18,13 @@ app = FastAPI(
 @app.on_event("startup")
 def on_startup():
     init_db()
+    try:
+        from app.services.supabase_service import SupabaseService
+        service = SupabaseService()
+        if service.is_configured:
+            service.ensure_bucket_exists("resumes")
+    except Exception as e:
+        logger.warning(f"Failed to auto-ensure storage buckets on startup: {str(e)}")
 
 # Request logging middleware writing stats to app.log
 @app.middleware("http")
@@ -70,6 +77,9 @@ app.include_router(score.router)
 app.include_router(semantic.router)
 app.include_router(formatting.router)
 app.include_router(recommendation.router)
+app.include_router(auth.router)
+app.include_router(user.router)
+app.include_router(history.router)
 
 # Health Check Route
 @app.get("/", tags=["General"])

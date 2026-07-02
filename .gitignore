@@ -29,3 +29,6 @@ dist/
 
 # Logs
 *.log
+
+#personal file
+test.txt

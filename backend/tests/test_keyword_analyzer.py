@@ -66,3 +66,12 @@ def test_keyword_analysis_api_route():
     assert "missing" in json_data
     assert "coverage_percentage" in json_data
     assert json_data["coverage_percentage"] > 0
+
+def test_keyword_analysis_identical_error():
+    payload = {
+        "resume_text": SAMPLE_RESUME,
+        "jd_text": SAMPLE_RESUME
+    }
+    response = client.post("/analyze/keywords", json=payload)
+    assert response.status_code == 400
+    assert "cannot be identical" in response.json()["detail"]

@@ -175,6 +175,67 @@ class SupabaseService:
         except Exception as e:
             raise RuntimeError(str(e))
 
+    def migrate_user_uuid_by_email(self, email: str, new_uuid: str) -> dict | None:
+        """
+        Migrates an existing user's record (and associated resumes) from an old UUID
+        to the new Supabase Auth UUID if the email matches.
+        """
+        if not self.is_configured:
+            # Mock mode implementation
+            old_uid = None
+            for uid, u in self._mock_users.items():
+                if u["email"].lower() == email.lower() and uid != new_uuid:
+                    old_uid = uid
+                    break
+            
+            if old_uid:
+                user_data = self._mock_users.pop(old_uid)
+                user_data["id"] = new_uuid
+                self._mock_users[new_uuid] = user_data
+                
+                # Migrate mock resumes
+                for resume in self._mock_resumes.values():
+                    if resume.get("user_id") == old_uid:
+                        resume["user_id"] = new_uuid
+            return self._mock_users.get(new_uuid)
+
+        try:
+            # Query if user exists with the matching email
+            response = self.client.table("users").select("*").eq("email", email).execute()
+            if response.data and len(response.data) > 0:
+                old_user = response.data[0]
+                old_uuid = old_user["id"]
+                if old_uuid != new_uuid:
+                    print(f"Migrating user {email} from old UUID {old_uuid} to new UUID {new_uuid}...")
+                    
+                    # 1. Insert temporary new user with temp email to satisfy resumes FK constraint
+                    temp_email = f"{email}-temp-{uuid.uuid4()}"
+                    self.client.table("users").insert({
+                        "id": new_uuid,
+                        "email": temp_email,
+                        "subscription_plan": old_user.get("subscription_plan", "free"),
+                        "ai_generation_count": old_user.get("ai_generation_count", 0),
+                        "last_ai_generation_at": old_user.get("last_ai_generation_at")
+                    }).execute()
+                    
+                    # 2. Update resumes user_id to new_uuid
+                    self.client.table("resumes").update({"user_id": new_uuid}).eq("user_id", old_uuid).execute()
+                    
+                    # 3. Delete old user record
+                    self.client.table("users").delete().eq("id", old_uuid).execute()
+                    
+                    # 4. Update new user to restore original email
+                    self.client.table("users").update({"email": email}).eq("id", new_uuid).execute()
+                    
+                response = self.client.table("users").select("*").eq("id", new_uuid).execute()
+                return response.data[0] if response.data else None
+            return None
+        except Exception as e:
+            print(f"Warning: Failed to migrate user UUID by email: {str(e)}")
+            return None
+
+
+
     def update_user_plan(self, user_uuid: str, plan: str) -> dict | None:
         """
         Upgrades or updates the subscription plan tier of a user.
@@ -224,7 +285,7 @@ class SupabaseService:
         file_url: str | None = None
     ) -> dict:
         """
-        Saves parsed resume data into Supabase 'resumes' table.
+        Saves parsed resume data into Supabase 'resumes' table and prunes history to latest 10.
         """
         payload = {
             "user_id": user_id,
@@ -241,6 +302,17 @@ class SupabaseService:
             new_id = str(uuid.uuid4())
             payload["id"] = new_id
             self._mock_resumes[new_id] = payload
+            
+            # Prune mock resumes to latest 10
+            user_resumes = [r for r in self._mock_resumes.values() if r.get("user_id") == user_id and not r.get("is_deleted", False)]
+            user_resumes.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+            if len(user_resumes) > 10:
+                to_delete = user_resumes[10:]
+                for old_res in to_delete:
+                    old_id = old_res.get("id")
+                    if old_id in self._mock_resumes:
+                        self._mock_resumes[old_id]["is_deleted"] = True
+                        
             return payload
 
         try:
@@ -254,7 +326,20 @@ class SupabaseService:
                 "name": name
             }).execute()
             if response.data and len(response.data) > 0:
-                return response.data[0]
+                inserted_resume = response.data[0]
+                
+                # Prune Supabase database resumes to latest 10
+                try:
+                    res_query = self.client.table("resumes").select("id").eq("user_id", user_id).eq("is_deleted", False).order("created_at", desc=True).execute()
+                    if res_query.data and len(res_query.data) > 10:
+                        ids_to_keep = [r["id"] for r in res_query.data[:10]]
+                        ids_to_delete = [r["id"] for r in res_query.data if r["id"] not in ids_to_keep]
+                        if ids_to_delete:
+                            self.client.table("resumes").update({"is_deleted": True}).in_("id", ids_to_delete).execute()
+                except Exception as prune_err:
+                    print(f"Warning: Failed to prune user scan history in DB: {str(prune_err)}")
+                    
+                return inserted_resume
             raise RuntimeError("No data returned from database insert.")
         except Exception as e:
             raise RuntimeError(f"Database error during resume insertion: {str(e)}")
@@ -309,7 +394,7 @@ class SupabaseService:
             # Filter mock resumes by user_id
             user_resumes = [
                 r for r in self._mock_resumes.values() 
-                if r.get("user_id") == user_uuid
+                if r.get("user_id") == user_uuid and not r.get("is_deleted", False)
             ]
             # Order by created_at desc (or mock order)
             user_resumes.reverse()
@@ -340,13 +425,13 @@ class SupabaseService:
 
         try:
             # Query count
-            count_res = self.client.table("resumes").select("id", count="exact").eq("user_id", user_uuid).execute()
+            count_res = self.client.table("resumes").select("id", count="exact").eq("user_id", user_uuid).eq("is_deleted", False).execute()
             total = count_res.count if count_res.count is not None else 0
 
             # Query items
             response = self.client.table("resumes").select(
                 "id", "file_name", "name", "email", "phone", "created_at", "recommendations"
-            ).eq("user_id", user_uuid).order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+            ).eq("user_id", user_uuid).eq("is_deleted", False).order("created_at", desc=True).range(offset, offset + limit - 1).execute()
             
             items = []
             if response.data:
@@ -374,33 +459,33 @@ class SupabaseService:
 
     def delete_history_by_id(self, user_uuid: str, resume_id: str) -> bool:
         """
-        Deletes a resume record ensuring ownership by the authenticated user UUID.
+        Soft deletes a resume record ensuring ownership by the authenticated user UUID.
         """
         if not self.is_configured:
             if resume_id in self._mock_resumes:
                 if self._mock_resumes[resume_id].get("user_id") == user_uuid:
-                    del self._mock_resumes[resume_id]
+                    self._mock_resumes[resume_id]["is_deleted"] = True
                     return True
             return False
 
         try:
-            response = self.client.table("resumes").delete().eq("id", resume_id).eq("user_id", user_uuid).execute()
+            response = self.client.table("resumes").update({"is_deleted": True}).eq("id", resume_id).eq("user_id", user_uuid).execute()
             return len(response.data) > 0 if response.data else True
         except Exception as e:
-            raise RuntimeError(f"Failed to delete history record: {str(e)}")
+            raise RuntimeError(f"Failed to soft delete history record: {str(e)}")
 
     def get_resume_by_id(self, user_uuid: str, resume_id: str) -> dict | None:
         """
-        Retrieves a full resume record for dashboard reloading, verifying user ownership.
+        Retrieves a full resume record for dashboard reloading, verifying user ownership and active status.
         """
         if not self.is_configured:
             res = self._mock_resumes.get(resume_id)
-            if res and res.get("user_id") == user_uuid:
+            if res and res.get("user_id") == user_uuid and not res.get("is_deleted", False):
                 return res
             return None
 
         try:
-            response = self.client.table("resumes").select("*").eq("id", resume_id).eq("user_id", user_uuid).execute()
+            response = self.client.table("resumes").select("*").eq("id", resume_id).eq("user_id", user_uuid).eq("is_deleted", False).execute()
             return response.data[0] if response.data else None
         except Exception as e:
             raise RuntimeError(f"Failed to fetch resume details: {str(e)}")
@@ -425,21 +510,3 @@ class SupabaseService:
         except Exception as e:
             print(f"Warning: Failed to upload file to storage: {str(e)}")
             return None
-
-    def update_user_password(self, email: str, new_password_hash: str) -> bool:
-        """
-        Updates user password hash in the database.
-        """
-        if not self.is_configured:
-            # Update mock database
-            user = self.get_user_by_email(email)
-            if user:
-                user["password_hash"] = new_password_hash
-                return True
-            return False
-
-        try:
-            response = self.client.table("users").update({"password_hash": new_password_hash}).eq("email", email).execute()
-            return len(response.data) > 0 if response.data else False
-        except Exception as e:
-            raise RuntimeError(f"Database error during password update: {str(e)}")

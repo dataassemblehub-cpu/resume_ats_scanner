@@ -2,56 +2,51 @@
 
 @layer base {
   :root {
-    --bg-main: #090d16;
-    --bg-card: rgba(20, 26, 42, 0.65);
-    --bg-card-hover: rgba(30, 38, 60, 0.85);
-    --border-color: rgba(255, 255, 255, 0.08);
-    --border-color-hover: rgba(255, 255, 255, 0.15);
+    /* GitHub Dark Theme Color Palette */
+    --bg-main: #0D1117;
+    --bg-card: #161B22;
+    --bg-card-hover: #21262D;
+    --border-color: #30363D;
+    --border-color-hover: #8B949E;
     
-    --accent-teal: #14b8a6;
-    --accent-blue: #0ea5e9;
-    --accent-violet: #8b5cf6;
-    --accent-rose: #f43f5e;
-    --accent-amber: #f59e0b;
+    --accent-teal: #3FB950;       /* GitHub Success Green */
+    --accent-blue: #2F81F7;       /* GitHub Accent Blue */
+    --accent-violet: #8957E5;     /* GitHub Purple Accent */
+    --accent-rose: #DA3633;       /* GitHub Danger Red */
+    --accent-amber: #D29922;      /* GitHub Warning Amber */
     
-    --text-main: #f3f4f6;
-    --text-muted: #9ca3af;
-    --text-dark: #6b7280;
+    --text-main: #F0F6FC;         /* Text Primary */
+    --text-muted: #8B949E;        /* Text Secondary */
+    --text-dark: #6E7681;         /* Muted Gray */
     
-    --shadow-glow: 0 0 25px rgba(14, 165, 233, 0.15);
+    --shadow-glow: 0 1px 0 rgba(0, 0, 0, 0.04);
   }
 
   body {
     background-color: var(--bg-main);
     color: var(--text-main);
-    font-family: var(--font-outfit), system-ui, -apple-system, sans-serif;
+    font-family: var(--font-outfit), -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     min-height: 100vh;
-    background-image: 
-      radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
-      radial-gradient(circle at 90% 80%, rgba(14, 165, 233, 0.05) 0%, transparent 40%),
-      radial-gradient(circle at 50% 50%, rgba(20, 184, 166, 0.03) 0%, transparent 60%);
+    background-image: none; /* Removed Drifting Gradients for a clean technical UI */
     background-attachment: fixed;
     overflow-x: hidden;
   }
 }
 
-/* Glassmorphism Cards */
+/* Minimal solid cards following GitHub Projects/Issues design styling */
 .glass-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
-  border-radius: 1rem;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 6px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
 }
 
 .glass-panel:hover {
   border-color: var(--border-color-hover);
-  background: var(--bg-card-hover);
 }
 
-/* Accent Gradients */
+/* Accent Gradients (Muted transitions) */
 .text-gradient {
   background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-violet) 100%);
   -webkit-background-clip: text;
@@ -64,61 +59,61 @@
   -webkit-text-fill-color: transparent;
 }
 
+/* Solid GitHub Green primary button style */
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-violet) 100%);
+  background-color: #238636;
+  border: 1px solid rgba(240, 246, 252, 0.1);
   color: #ffffff;
-  font-weight: 600;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1.5rem;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.25);
-  border: none;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 13px;
+  transition: background-color 0.15s ease-in-out;
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+  background-color: #2ea44f;
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  background-color: #24813a;
 }
 
 .btn-primary:disabled {
-  background: #374151;
-  color: #9ca3af;
+  background: #21262D;
+  border-color: #30363D;
+  color: #6E7681;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
-/* Custom Tabs styling */
+/* GitHub tab navigation underliner */
 .tab-button {
   background: transparent;
   color: var(--text-muted);
   border: none;
   border-bottom: 2px solid transparent;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 1.25rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  font-size: 13px;
 }
 
 .tab-button.active {
-  color: var(--accent-blue);
-  border-bottom-color: var(--accent-blue);
-  text-shadow: 0 0 10px rgba(14, 165, 233, 0.25);
+  color: var(--text-main);
+  border-bottom-color: #F78166; /* GitHub Active Tab Orange line */
 }
 
 .tab-button:hover:not(.active) {
   color: var(--text-main);
+  border-bottom-color: var(--border-color);
 }
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -126,20 +121,19 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
+  background: #21262D;
+  border: 2px solid var(--bg-main);
+  border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-dark);
+  background: var(--border-color-hover);
 }
 
-/* SVG Score Circle Animations */
 .score-circle {
   transition: stroke-dashoffset 1s ease-in-out;
 }
 
-/* Loader checkmarks animations */
 @keyframes checkmark-draw {
   to {
     stroke-dashoffset: 0;
@@ -154,23 +148,19 @@
 
 /* Premium Glow Cards */
 .glow-card-violet:hover {
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
-  border-color: rgba(139, 92, 246, 0.3);
+  border-color: var(--accent-violet);
 }
 
 .glow-card-sky:hover {
-  box-shadow: 0 0 30px rgba(14, 165, 233, 0.15);
-  border-color: rgba(14, 165, 233, 0.3);
+  border-color: var(--accent-blue);
 }
 
 .glow-card-teal:hover {
-  box-shadow: 0 0 30px rgba(20, 184, 166, 0.15);
-  border-color: rgba(20, 184, 166, 0.3);
+  border-color: var(--accent-teal);
 }
 
 .glow-card-amber:hover {
-  box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.3);
+  border-color: var(--accent-amber);
 }
 
 /* Shimmer Loading Animations */
@@ -184,62 +174,31 @@
 }
 
 .shimmer-bg {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 75%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.01) 25%, rgba(255, 255, 255, 0.04) 50%, rgba(255, 255, 255, 0.01) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
 }
 
-/* Hide scrollbar utility */
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
 .scrollbar-none {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Ambient Floating Glow Blobs */
-@keyframes float-blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.08);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.96);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-}
-
-.animate-blob {
-  animation: float-blob 12s infinite ease-in-out;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2.5s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 5s;
-}
-
-/* Sidebar Tab highlights */
+/* Sidebar Tab highlights (GitHub Nav styling) */
 .sidebar-button {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
-  font-size: 0.825rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--text-muted);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease-in-out;
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
@@ -248,14 +207,14 @@
 
 .sidebar-button:hover {
   color: var(--text-main);
-  background: rgba(255, 255, 255, 0.03);
+  background: #21262D;
 }
 
 .sidebar-button.active {
-  color: var(--accent-blue);
-  background: rgba(14, 165, 233, 0.08);
-  border-color: rgba(14, 165, 233, 0.15);
-  box-shadow: inset 0 0 12px rgba(14, 165, 233, 0.05);
+  color: var(--text-main);
+  background: #21262D;
+  border-color: var(--border-color);
+  font-weight: 600;
 }
 
 /* Mobile Bottom Tab bar button */
@@ -266,12 +225,10 @@
   gap: 0.25rem;
   flex: 1;
   padding: 0.5rem 0.25rem;
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 10px;
+  font-weight: 500;
   color: var(--text-muted);
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -280,4 +237,3 @@
 .mobile-nav-button.active {
   color: var(--accent-blue);
 }
-

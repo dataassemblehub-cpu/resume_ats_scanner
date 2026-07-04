@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth, useEntitlements } from '@/lib/auth';
 import { getHistoryDetail, runComprehensiveAnalysis, ComprehensiveAnalysisResult } from '@/lib/api';
+import { toast } from 'react-hot-toast';
 
 // Formatting helpers replicated from FormattingDetails for print view
 function getImpact(text: string): { points: string; severity: 'error' | 'warning' | 'info'; pointsNum: number } {
@@ -102,6 +103,13 @@ export default function ExportPage() {
     localStorage.setItem('ats_export_autoprint', String(val));
   };
 
+  const handlePrint = () => {
+    toast.success('Opening print dialog...', { id: 'print-dialog', duration: 2500 });
+    setTimeout(() => {
+      window.print();
+    }, 200);
+  };
+
   // 2. Load data from local storage (fast path) or API (fallback/direct URL share)
   useEffect(() => {
     if (authLoading) return;
@@ -114,6 +122,7 @@ export default function ExportPage() {
       try {
         setLoading(true);
         setError(null);
+        toast.loading('Preparing report preview...', { id: 'export-load' });
 
         // Check cache first
         const cachedStr = localStorage.getItem('ats_export_data');
@@ -124,6 +133,7 @@ export default function ExportPage() {
               setResult(cached);
               setCreatedAt(cached.created_at || cached.createdAt || new Date().toISOString());
               setLoading(false);
+              toast.success('Report preview ready!', { id: 'export-load' });
               return;
             }
           } catch (e) {
@@ -145,9 +155,11 @@ export default function ExportPage() {
 
         setResult(finalResult);
         setCreatedAt(detail.created_at || new Date().toISOString());
+        toast.success('Report preview ready!', { id: 'export-load' });
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Failed to load scan report.');
+        toast.error(err.message || 'Failed to load scan report.', { id: 'export-load' });
       } finally {
         setLoading(false);
       }
@@ -160,7 +172,7 @@ export default function ExportPage() {
   useEffect(() => {
     if (!loading && result && autoPrint) {
       const timer = setTimeout(() => {
-        window.print();
+        handlePrint();
       }, 800);
       return () => clearTimeout(timer);
     }
@@ -345,7 +357,7 @@ export default function ExportPage() {
           </label>
 
           <button
-            onClick={() => window.print()}
+            onClick={handlePrint}
             className="flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-xs font-black text-white rounded-lg shadow-lg hover:shadow-sky-500/10 active:scale-95 transition-all"
           >
             🖨️ Print / Save to PDF

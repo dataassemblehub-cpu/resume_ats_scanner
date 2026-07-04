@@ -2,34 +2,29 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { forgotPassword, resetPassword } from '@/lib/api';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialTab?: 'login' | 'register' | 'forgot' | 'reset';
+  initialTab?: 'login' | 'register';
 }
 
 export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: AuthModalProps) {
   const { login, register } = useAuth();
-  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot' | 'reset'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>(initialTab);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [resetToken, setResetToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [debugToken, setDebugToken] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const clearForm = () => {
     setEmail('');
     setPassword('');
-    setResetToken('');
     setError(null);
     setSuccessMessage(null);
-    setDebugToken(null);
   };
 
   const handleClose = () => {
@@ -51,22 +46,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
       } else if (activeTab === 'register') {
         await register(email, password);
         clearForm();
-        onClose();
-      } else if (activeTab === 'forgot') {
-        const res = await forgotPassword(email);
-        setSuccessMessage('A password reset verification code has been dispatched.');
-        if (res.debug_token) {
-          setDebugToken(res.debug_token);
-        }
-        // Clear inputs after clicking forgot password send button
-        setEmail('');
-        setPassword('');
-        setResetToken('');
-        setActiveTab('reset');
-      } else if (activeTab === 'reset') {
-        await resetPassword(email, resetToken, password);
-        clearForm();
-        setSuccessMessage('Password reset successful! Please sign in with your new credentials.');
+        setSuccessMessage('Registration successful! Please sign in with your credentials.');
         setActiveTab('login');
       }
     } catch (err: any) {
@@ -101,63 +81,49 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
           <h2 className="text-xl font-extrabold text-white tracking-tight">
             {activeTab === 'login' && 'Welcome Back'}
             {activeTab === 'register' && 'Create Account'}
-            {activeTab === 'forgot' && 'Reset Password'}
-            {activeTab === 'reset' && 'Enter Reset Code'}
           </h2>
           <p className="text-xs text-gray-400 mt-1">
             {activeTab === 'login' && 'Sign in to access resume history and AI recommendations'}
             {activeTab === 'register' && 'Join to scan resumes and unlock professional suggestions'}
-            {activeTab === 'forgot' && 'Request a verification token to update your password'}
-            {activeTab === 'reset' && 'Provide the code sent to your email to configure new password'}
           </p>
         </div>
 
-        {/* Tab Toggle (Only for Login & Register) */}
-        {(activeTab === 'login' || activeTab === 'register') && (
-          <div className="flex bg-white/5 border border-white/5 rounded-xl p-1">
-            <button
-              type="button"
-              onClick={() => {
-                clearForm();
-                setActiveTab('login');
-              }}
-              className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
-                activeTab === 'login'
-                  ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                clearForm();
-                setActiveTab('register');
-              }}
-              className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
-                activeTab === 'register'
-                  ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Register
-            </button>
-          </div>
-        )}
+        {/* Tab Toggle (Login & Register) */}
+        <div className="flex bg-white/5 border border-white/5 rounded-xl p-1">
+          <button
+            type="button"
+            onClick={() => {
+              clearForm();
+              setActiveTab('login');
+            }}
+            className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
+              activeTab === 'login'
+                ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              clearForm();
+              setActiveTab('register');
+            }}
+            className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
+              activeTab === 'register'
+                ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Register
+          </button>
+        </div>
 
         {/* Success Message */}
         {successMessage && (
           <div className="p-3 text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg">
             {successMessage}
-          </div>
-        )}
-
-        {/* Debug Token Alert (For developer testing convenience) */}
-        {debugToken && (
-          <div className="p-3 text-xs bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg flex flex-col gap-1">
-            <span className="font-bold">🧪 Debug Simulator Token:</span>
-            <span className="font-mono text-white select-all bg-black/40 px-2 py-1 rounded mt-0.5">{debugToken}</span>
           </div>
         )}
 
@@ -186,53 +152,20 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
             />
           </div>
 
-          {/* Token Input (Only for Reset Password Tab) */}
-          {activeTab === 'reset' && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                Reset Verification Code / Token
-              </label>
-              <input
-                type="text"
-                required
-                value={resetToken}
-                onChange={(e) => setResetToken(e.target.value)}
-                placeholder="mock-reset-XXXX"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
-              />
-            </div>
-          )}
-
-          {/* Password Input (Login, Register, and Reset tabs) */}
-          {activeTab !== 'forgot' && (
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  {activeTab === 'reset' ? 'New Password' : 'Password'}
-                </label>
-                {activeTab === 'login' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      clearForm();
-                      setActiveTab('forgot');
-                    }}
-                    className="text-[10px] font-bold text-sky-400 hover:text-sky-300 transition-colors"
-                  >
-                    Forgot password?
-                  </button>
-                )}
-              </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
-              />
-            </div>
-          )}
+          {/* Password Input */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              Password
+            </label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
+            />
+          </div>
 
           <button
             type="submit"
@@ -248,25 +181,10 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
               <span>
                 {activeTab === 'login' && 'Sign In'}
                 {activeTab === 'register' && 'Register'}
-                {activeTab === 'forgot' && 'Send Reset Code'}
-                {activeTab === 'reset' && 'Reset Password'}
               </span>
             )}
           </button>
         </form>
-
-        {/* Back Link for reset/forgot tabs */}
-        {(activeTab === 'forgot' || activeTab === 'reset') && (
-          <button
-            onClick={() => {
-              clearForm();
-              setActiveTab('login');
-            }}
-            className="text-center text-xs font-bold text-gray-400 hover:text-white transition-colors mt-2 cursor-pointer"
-          >
-            ← Back to Sign In
-          </button>
-        )}
       </div>
     </div>
   );

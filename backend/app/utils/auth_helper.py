@@ -39,7 +39,6 @@ def verify_jwt(token: str) -> dict | None:
     except Exception:
         return None
 
-
 def hash_password(password: str) -> str:
     """
     PBKDF2 SHA-256 password hashing with constant salt.
@@ -101,7 +100,6 @@ async def get_current_user(authorization: str | None = Header(None)) -> dict:
 
     # 2. Mock mode verification fallback when Supabase is not configured
     if not supabase_service.is_configured:
-        # Attempt to decode email from JWT payload or fallback to mock-token parsing
         email = "test@example.com"
         if token.count(".") == 2:
             try:
@@ -118,11 +116,13 @@ async def get_current_user(authorization: str | None = Header(None)) -> dict:
             email = token.replace("mock-token-", "")
             
         user_id = supabase_service.get_or_create_user(email)
-        
-        # Retrieve local mock profile from Supabase service mockup database
         user_record = supabase_service.get_user_by_uuid(user_id)
         if not user_record:
             raise HTTPException(status_code=401, detail="Invalid session token.")
+        
+        # Override to premium if bypass is enabled in non-production environments
+        if settings.BYPASS_PREMIUM and settings.ENV != "production":
+            user_record["subscription_plan"] = "premium"
         return user_record
 
     # 3. Native Supabase Auth Token verification
@@ -136,6 +136,10 @@ async def get_current_user(authorization: str | None = Header(None)) -> dict:
 
         # Retrieve user database profile to fetch plan, counts, etc.
         user_profile = supabase_service.get_user_by_uuid(user_uuid)
+        if not user_profile:
+            # Try migrating by email if profile exists under a different UUID
+            user_profile = supabase_service.migrate_user_uuid_by_email(email, user_uuid)
+            
         if not user_profile:
             # Fallback to create profile record if missing
             supabase_service.client.table("users").insert({

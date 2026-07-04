@@ -61,7 +61,7 @@ async def get_history_detail(
                 "phone": resume.get("phone"),
                 "parsed_text": resume["parsed_text"]
             },
-            "jd_text": resume.get("jd_text"),
+            "jdText": resume.get("jd_text"),
             "recommendations": recs,
             "created_at": resume["created_at"]
         }

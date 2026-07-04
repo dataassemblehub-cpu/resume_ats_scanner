@@ -247,12 +247,7 @@ export default function Home() {
 
   return (
     <div className="flex-1 flex flex-col w-full min-h-screen relative z-10">
-      {/* Floating Ambient Glow Blobs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[10%] left-[5%] w-[350px] h-[350px] rounded-full bg-violet-500/5 blur-[90px] animate-blob" />
-        <div className="absolute bottom-[15%] right-[5%] w-[400px] h-[400px] rounded-full bg-sky-500/5 blur-[100px] animate-blob animation-delay-2000" />
-        <div className="absolute top-[50%] left-[45%] w-[300px] h-[300px] rounded-full bg-teal-500/3 blur-[80px] animate-blob animation-delay-4000" />
-      </div>
+      {/* Background container following GitHub aesthetics */}
 
       {state === 'success' && analysisResult ? (
         <div className="flex-1 flex flex-col w-full relative z-10">
@@ -309,17 +304,19 @@ export default function Home() {
             </div>
           </header>
 
-          {/* Main Split Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            {/* Left Column: Control Panel / Input Form */}
-            <div className="lg:col-span-1 flex flex-col gap-6">
-              <div className="glass-panel p-6">
-                <h2 className="text-md font-bold text-gray-100 uppercase tracking-wider mb-2">
-                  Scanner Dashboard
-                </h2>
-                <p className="text-xs text-gray-400 mb-6 leading-relaxed">
-                  Upload your resume and target job description. The engine will match keywords, run semantic checks, inspect layout compatibility, and calculate your ATS score.
-                </p>
+          {/* Main Content Area */}
+          {state === 'idle' && (
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch">
+              {/* Left Column: Bigger Upload Resume & JD Panel (3/5 cols) */}
+              <div className="lg:col-span-3 glass-panel p-8 relative flex flex-col justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-white tracking-tight mb-2">
+                    Resume & Job Description Analysis
+                  </h2>
+                  <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+                    Upload your resume file and paste or upload the target job description requirements. Our engine will calculate key matching scores instantly.
+                  </p>
+                </div>
                 <FileUpload
                   onScanStart={handleScanStart}
                   onScanComplete={handleScanComplete}
@@ -327,72 +324,120 @@ export default function Home() {
                 />
               </div>
 
-              <div className="glass-panel p-6 bg-gradient-to-r from-sky-500/5 to-violet-500/5 border border-sky-500/10">
-                <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wider mb-2">How it works</h4>
-                <ul className="text-[11px] text-gray-400 flex flex-col gap-2 list-disc pl-4 leading-relaxed">
-                  <li>Resumes are parsed and segmented into standard section blocks.</li>
-                  <li>Top keywords are extracted from the Job Description using a TF-IDF algorithm.</li>
-                  <li>Semantic matching maps conceptual fit using sentence-level transformer embeddings.</li>
-                  <li>Formatting checks identify layout, margins, bullet styles, and tables.</li>
-                </ul>
+              {/* Right Column: "How it works" replacing "Awaiting Analysis" (2/5 cols) */}
+              <div className="lg:col-span-2 glass-panel p-8 bg-gradient-to-br from-[#121826]/75 to-[#0b0e17]/75 border border-white/5 shadow-xl flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    How it works
+                  </h3>
+                  
+                  <div className="flex flex-col gap-6">
+                    {/* Step 1 */}
+                    <div className="flex gap-4">
+                      <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-xs font-bold text-sky-400 shrink-0">
+                        1
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-200">Segment Sections</h4>
+                        <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
+                          Resumes are parsed and segmented into standard sections (experience, skills, projects, and education).
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="flex gap-4">
+                      <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-xs font-bold text-violet-400 shrink-0">
+                        2
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-200">TF-IDF Keyword Extraction</h4>
+                        <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
+                          Top technical and soft keywords are programmatically extracted from the Job Description requirements.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="flex gap-4">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 shrink-0">
+                        3
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-200">Semantic Conceptual Fit</h4>
+                        <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
+                          Sentence-level transformer embeddings map how well your experience aligns conceptually with the JD.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 4 */}
+                    <div className="flex gap-4">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0">
+                        4
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-200">Format Compliance Checks</h4>
+                        <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
+                          Scans for parsing barriers like multi-column tables, complex margins, non-standard bullet characters, and font sizes.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-4 border-t border-white/5 flex items-center justify-between text-[10px] text-gray-500">
+                  <span>ATS Match Engine v1.0.0</span>
+                  <span className="flex items-center gap-1 font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Online & Ready
+                  </span>
+                </div>
               </div>
             </div>
+          )}
 
-            {/* Right Column: Dynamic Analysis Panels */}
-            <div className="lg:col-span-2 flex flex-col gap-6">
-              {state === 'idle' && (
-                <div className="glass-panel p-12 flex flex-col items-center justify-center text-center gap-6 min-h-[450px]">
-                  <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-sky-500/10 to-violet-500/10 blur rounded-2xl" />
-                    <svg className="w-8 h-8 text-sky-400 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div className="flex flex-col gap-2 max-w-sm">
-                    <h3 className="text-lg font-bold text-white">Awaiting Analysis</h3>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      Ready to calculate your ATS match. Select a file on the left and enter a Job Description requirements text to begin.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {state === 'scanning' && (
-                <LoadingStages stages={stages} />
-              )}
-
-              {state === 'error' && (
-                <div className="glass-panel p-10 flex flex-col items-center justify-center text-center gap-5 border-l-4 border-l-rose-500 min-h-[400px]">
-                  <div className="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center">
-                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                  <div className="flex flex-col gap-2 max-w-md">
-                    {errorMessage.includes("cannot be identical") ? (
-                      <>
-                        <h3 className="text-md font-bold text-rose-400">Error: Resume and Job Description cannot be identical.</h3>
-                        <p className="text-xs text-gray-400 leading-relaxed mt-1">
-                          Please make sure to select two different files or provide a distinct job description text relative to your resume.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <h3 className="text-md font-bold text-rose-400">Analysis calculation error</h3>
-                        <p className="text-xs text-gray-400 leading-relaxed">{errorMessage}</p>
-                      </>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 text-xs font-semibold rounded-lg transition-all"
-                  >
-                    Go Back & Retry
-                  </button>
-                </div>
-              )}
+          {state === 'scanning' && (
+            <div className="max-w-3xl mx-auto w-full py-12">
+              <LoadingStages stages={stages} />
             </div>
-          </div>
+          )}
+
+          {state === 'error' && (
+            <div className="max-w-xl mx-auto w-full py-12">
+              <div className="glass-panel p-10 flex flex-col items-center justify-center text-center gap-5 border-l-4 border-l-rose-500 min-h-[400px]">
+                <div className="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center">
+                  <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div className="flex flex-col gap-2 max-w-md">
+                  {errorMessage.includes("cannot be identical") ? (
+                    <>
+                      <h3 className="text-md font-bold text-rose-400">Error: Resume and Job Description cannot be identical.</h3>
+                      <p className="text-xs text-gray-400 leading-relaxed mt-1">
+                        Please make sure to select two different files or provide a distinct job description text relative to your resume.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-md font-bold text-rose-400">Analysis calculation error</h3>
+                      <p className="text-xs text-gray-400 leading-relaxed">{errorMessage}</p>
+                    </>
+                  )}
+                </div>
+                <button
+                  onClick={handleReset}
+                  className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 text-xs font-semibold rounded-lg transition-all cursor-pointer active:scale-95"
+                >
+                  Go Back & Retry
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />

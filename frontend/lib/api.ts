@@ -262,14 +262,6 @@ export async function loginUser(email: string, password: string): Promise<{ acce
   return postJSON('/auth/login', { email, password });
 }
 
-export async function forgotPassword(email: string): Promise<{ status: string, message: string, debug_token?: string }> {
-  return postJSON('/auth/forgot-password', { email });
-}
-
-export async function resetPassword(email: string, token: string, newPassword: string): Promise<{ status: string, message: string }> {
-  return postJSON('/auth/reset-password', { email, token, new_password: newPassword });
-}
-
 export async function getUserProfile(): Promise<UserProfile> {
   return getJSON('/user/profile');
 }

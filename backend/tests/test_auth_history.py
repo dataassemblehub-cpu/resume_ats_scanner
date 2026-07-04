@@ -119,6 +119,7 @@ def test_paginated_history():
     headers = {"Authorization": "Bearer mock-token-test@example.com"}
     
     user_uuid = "00000000-0000-0000-0000-000000000000"
+    supabase_service._mock_resumes.clear()
 
     # Populate 15 mockup resumes
     for i in range(15):
@@ -131,49 +132,15 @@ def test_paginated_history():
             phone="12345"
         )
 
-    # 1. Fetch first page
+    # 1. Fetch history (should be capped at 10 items due to automatic soft-pruning)
     history_res = client.get("/history?page=1&limit=10", headers=headers)
     assert history_res.status_code == 200
     data = history_res.json()
     assert len(data["items"]) == 10
-    assert data["total"] == 15
+    assert data["total"] == 10
     assert data["page"] == 1
-    assert data["pages"] == 2
+    assert data["pages"] == 1
 
-    # 2. Fetch second page
-    history_res2 = client.get("/history?page=2&limit=10", headers=headers)
-    assert history_res2.status_code == 200
-    data2 = history_res2.json()
-    assert len(data2["items"]) == 5
-    assert data2["page"] == 2
-
-def test_forgot_and_reset_password_flow():
-    # 1. Register a user
-    reg_data = {"email": "reset-test@example.com", "password": "oldpassword123"}
-    client.post("/auth/register", json=reg_data)
-    
-    # 2. Request forgot password
-    forgot_res = client.post("/auth/forgot-password", json={"email": "reset-test@example.com"})
-    assert forgot_res.status_code == 200
-    assert "debug_token" in forgot_res.json()
-    token = forgot_res.json()["debug_token"]
-    
-    # 3. Reset password using token
-    reset_payload = {
-        "email": "reset-test@example.com",
-        "token": token,
-        "new_password": "newpassword123"
-    }
-    reset_res = client.post("/auth/reset-password", json=reset_payload)
-    assert reset_res.status_code == 200
-    assert "successfully updated" in reset_res.json()["message"]
-    
-    # 4. Attempt login with old password fails
-    login_fail = client.post("/auth/login", json={"email": "reset-test@example.com", "password": "oldpassword123"})
-    assert login_fail.status_code == 401
-    
-    # 5. Login with new password succeeds
-    login_success = client.post("/auth/login", json={"email": "reset-test@example.com", "password": "newpassword123"})
-    assert login_success.status_code == 200
-    assert "access_token" in login_success.json()
-
+    # Verify that the oldest 5 resumes are soft deleted (is_deleted is True)
+    soft_deleted_count = sum(1 for r in supabase_service._mock_resumes.values() if r.get("is_deleted") is True)
+    assert soft_deleted_count == 5

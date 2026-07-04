@@ -8,6 +8,7 @@ import {
   runComprehensiveAnalysis, 
   ComprehensiveAnalysisResult 
 } from '@/lib/api';
+import { toast } from 'react-hot-toast';
 
 interface HistorySectionProps {
   onLoadScan: (result: ComprehensiveAnalysisResult) => void;
@@ -18,17 +19,11 @@ export default function HistorySection({ onLoadScan, onSetTab }: HistorySectionP
   const [items, setItems] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [limit] = useState(5);
+  const [limit] = useState(10);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
 
   const fetchHistory = useCallback(async (pageNum: number) => {
     setLoading(true);
@@ -75,7 +70,7 @@ export default function HistorySection({ onLoadScan, onSetTab }: HistorySectionP
       // 3. Re-inject stored AI recommendations
       const finalResult: ComprehensiveAnalysisResult = {
         ...analysis,
-        jdText: detail.jd_text,
+        jdText: detail.jdText || detail.jd_text,
         recommendations: detail.recommendations || undefined
       };
 
@@ -83,10 +78,10 @@ export default function HistorySection({ onLoadScan, onSetTab }: HistorySectionP
       onLoadScan(finalResult);
       localStorage.setItem('ats_analysis_result', JSON.stringify(finalResult));
       onSetTab('overview');
-      showToast('Scan report successfully loaded!');
+      toast.success('Scan report successfully loaded!');
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Failed to reconstruct report calculations.');
+      toast.error(err.message || 'Failed to reconstruct report calculations.');
     } finally {
       setLoadingItemId(null);
     }
@@ -96,14 +91,14 @@ export default function HistorySection({ onLoadScan, onSetTab }: HistorySectionP
     if (!confirm('Are you sure you want to delete this scan from your history?')) return;
     try {
       await deleteHistoryItem(itemId);
-      showToast('Scan deleted successfully.');
+      toast.success('Scan deleted successfully.');
       
       // Re-fetch current page (or previous page if current page becomes empty)
       const nextPage = items.length === 1 && page > 1 ? page - 1 : page;
       fetchHistory(nextPage);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Failed to delete historical scan.');
+      toast.error(err.message || 'Failed to delete historical scan.');
     }
   };
 
@@ -126,21 +121,11 @@ export default function HistorySection({ onLoadScan, onSetTab }: HistorySectionP
     <div className="glass-panel p-6 flex flex-col gap-6 relative overflow-hidden min-h-[400px]">
       <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-violet-500/5 to-transparent blur-3xl pointer-events-none" />
 
-      {/* Toast Alert overlay */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 bg-teal-600/95 text-white font-bold text-xs px-4 py-2.5 rounded-xl backdrop-blur-md border border-teal-500/20 shadow-xl shadow-teal-500/10 z-50 flex items-center gap-2 select-none">
-          <svg className="w-4 h-4 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
-          </svg>
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/5 pb-4">
         <div>
-          <h2 className="text-md font-bold text-gray-100 uppercase tracking-wider">
-            Resume Scan History
+          <h2 className="text-xs font-bold text-gray-200 uppercase tracking-wider">
+            Recent Analyses
           </h2>
           <p className="text-xs text-gray-400 mt-1">
             Access past ATS scores, compatibility reviews, and AI-optimized bullet recommendations.
@@ -149,7 +134,7 @@ export default function HistorySection({ onLoadScan, onSetTab }: HistorySectionP
         <button
           onClick={async () => {
             await fetchHistory(page);
-            showToast('Scan history successfully refreshed!');
+            toast.success('Scan history successfully refreshed!');
           }}
           disabled={loading}
           className={`p-2 rounded-lg bg-white/5 border border-white/5 transition-all hover:scale-105 active:scale-95 ${
@@ -285,31 +270,7 @@ export default function HistorySection({ onLoadScan, onSetTab }: HistorySectionP
             </table>
           </div>
 
-          {/* Pagination Footer */}
-          {pages > 1 && (
-            <div className="flex items-center justify-between border-t border-white/5 pt-4">
-              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                Showing page {page} of {pages} ({total} scans total)
-              </span>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => fetchHistory(page - 1)}
-                  disabled={page === 1}
-                  className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-white/5 border border-white/5 text-gray-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => fetchHistory(page + 1)}
-                  disabled={page === pages}
-                  className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-white/5 border border-white/5 text-gray-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Pagination Footer - Removed since history is pruned to 10 max items */}
         </div>
       )}
     </div>

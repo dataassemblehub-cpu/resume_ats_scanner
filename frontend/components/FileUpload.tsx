@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { uploadResume } from '@/lib/api';
+import { toast } from 'react-hot-toast';
 
 interface FileUploadProps {
   onScanStart: () => void;
@@ -39,13 +40,13 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
     if (validTypes.includes(file.type) || isDocx) {
       return true;
     }
-    alert('Please upload a PDF or DOCX file.');
+    toast.error('Please upload a PDF or DOCX file.');
     return false;
   };
 
   const handleScan = async () => {
     if (!resumeFile) {
-      alert('Please upload a resume first.');
+      toast.error('Please upload a resume first.');
       return;
     }
 

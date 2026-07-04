@@ -247,12 +247,7 @@ export default function Home() {
 
   return (
     <div className="flex-1 flex flex-col w-full min-h-screen relative z-10">
-      {/* Floating Ambient Glow Blobs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[10%] left-[5%] w-[350px] h-[350px] rounded-full bg-violet-500/5 blur-[90px] animate-blob" />
-        <div className="absolute bottom-[15%] right-[5%] w-[400px] h-[400px] rounded-full bg-sky-500/5 blur-[100px] animate-blob animation-delay-2000" />
-        <div className="absolute top-[50%] left-[45%] w-[300px] h-[300px] rounded-full bg-teal-500/3 blur-[80px] animate-blob animation-delay-4000" />
-      </div>
+      {/* Background container following GitHub aesthetics */}
 
       {state === 'success' && analysisResult ? (
         <div className="flex-1 flex flex-col w-full relative z-10">
@@ -313,8 +308,7 @@ export default function Home() {
           {state === 'idle' && (
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch">
               {/* Left Column: Bigger Upload Resume & JD Panel (3/5 cols) */}
-              <div className="lg:col-span-3 glass-panel p-8 bg-[#0d111d]/60 border border-white/5 shadow-xl relative flex flex-col justify-between">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-sky-500/5 to-transparent blur-3xl pointer-events-none" />
+              <div className="lg:col-span-3 glass-panel p-8 relative flex flex-col justify-between">
                 <div>
                   <h2 className="text-lg font-bold text-white tracking-tight mb-2">
                     Resume & Job Description Analysis

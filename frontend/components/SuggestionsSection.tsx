@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { AIRecommendationsResult, KeywordResult } from '@/lib/api';
 import { useEntitlements } from '@/lib/auth';
+import { toast } from 'react-hot-toast';
 
 interface SuggestionsSectionProps {
   recommendations?: AIRecommendationsResult;
@@ -259,7 +260,7 @@ export default function SuggestionsSection({
                 <button
                   onClick={() => {
                     if (!canCopySuggestions) {
-                      alert('Copying all suggestions in Markdown requires Premium. Please upgrade to unlock.');
+                      toast.error('Copying suggestions is coming soon.');
                       return;
                     }
                     handleCopyAllSuggestions();
@@ -438,7 +439,7 @@ export default function SuggestionsSection({
                         <button
                           onClick={() => {
                             if (!canCopySuggestions) {
-                              alert('Copying bullet suggestions requires Premium. Please upgrade to unlock.');
+                              toast.error('Copying bullet suggestions is coming soon.');
                               return;
                             }
                             navigator.clipboard.writeText(parsed.after);
@@ -552,25 +553,28 @@ export default function SuggestionsSection({
             </div>
             <button
               onClick={() => {
-                if (!canGenerateAI) {
-                  alert('Regenerating recommendations requires Premium. Please upgrade to unlock.');
-                  return;
+                if (canGenerateAI) {
+                  onRegenerateSuggestions(resumeText);
                 }
-                onRegenerateSuggestions(resumeText);
               }}
-              disabled={isGenerating}
-              className="px-5 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 text-xs font-bold uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center gap-1.5 self-start sm:self-auto disabled:opacity-50"
+              disabled={isGenerating || !canGenerateAI}
+              title={!canGenerateAI ? "Available in future release" : "Regenerate recommendations"}
+              className={`px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all shadow-md flex items-center gap-1.5 self-start sm:self-auto ${
+                !canGenerateAI 
+                  ? 'bg-neutral-800/40 border border-neutral-700/30 text-gray-500 cursor-not-allowed opacity-50' 
+                  : 'bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 cursor-pointer active:scale-95'
+              }`}
             >
               {!canGenerateAI ? (
-                <svg className="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+                <span>🔒 Regenerate Suggestions</span>
               ) : (
-                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                </svg>
+                <>
+                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                  <span>Regenerate Suggestions</span>
+                </>
               )}
-              Regenerate Suggestions
             </button>
           </div>
 

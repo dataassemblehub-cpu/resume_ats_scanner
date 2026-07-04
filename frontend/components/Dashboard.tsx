@@ -9,6 +9,7 @@ import HistorySection from './HistorySection';
 import AuthModal from './AuthModal';
 import { useAuth, useEntitlements } from '@/lib/auth';
 import { TabType } from '../app/page';
+import { toast } from 'react-hot-toast';
 
 interface DashboardProps {
   result: ComprehensiveAnalysisResult;
@@ -208,19 +209,9 @@ export default function Dashboard({
                 <div className="text-[10px] text-gray-300 truncate font-mono" title={user.email}>{user.email}</div>
                 
                 {!isPremium && (
-                  <button
-                    onClick={async () => {
-                      try {
-                        await upgradeAccount();
-                        alert('Upgrade successful! You are now Premium.');
-                      } catch (err: any) {
-                        alert(err.message || 'Upgrade failed.');
-                      }
-                    }}
-                    className="mt-1 w-full py-1.5 bg-gradient-to-r from-teal-500 to-sky-500 hover:from-teal-400 hover:to-sky-400 text-white font-bold text-[10px] uppercase rounded-lg transition-all cursor-pointer text-center active:scale-95"
-                  >
-                    ✨ Upgrade to Premium
-                  </button>
+                  <div className="mt-1 w-full py-1.5 bg-[#21262D] border border-[#30363D] text-[#8B949E] font-bold text-[10px] uppercase rounded-lg text-center select-none shadow-sm">
+                    ⚡ Coming Soon
+                  </div>
                 )}
                 
                 <button
@@ -388,30 +379,18 @@ export default function Dashboard({
                   </div>
                 ) : !canGenerateAI ? (
                   <div className="flex flex-col items-center gap-6 relative z-10">
-                    <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                      <svg className="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
+                    <div className="w-16 h-16 rounded-2xl bg-[#21262D] border border-[#30363D] flex items-center justify-center">
+                      <span className="text-xl">⚡</span>
                     </div>
                     <div className="flex flex-col gap-2 max-w-md">
-                      <h3 className="text-xl font-extrabold text-white tracking-tight">Free Tier Limit Reached</h3>
-                      <p className="text-sm text-gray-400 leading-relaxed">
-                        You have utilized your 1 free AI recommendations scan. Upgrade to Premium to unlock unlimited scans, professional CV re-writing, and PDF exports.
+                      <h3 className="text-lg font-bold text-white tracking-tight">AI Suggestions</h3>
+                      <p className="text-xs text-gray-400 leading-relaxed">
+                        Additional recommendations and unlimited reports are coming soon! Keep scanning to optimize your resume.
                       </p>
                     </div>
-                    <button
-                      onClick={async () => {
-                        try {
-                          await upgradeAccount();
-                          alert('Upgrade successful! You are now Premium.');
-                        } catch (err: any) {
-                          alert(err.message || 'Upgrade failed.');
-                        }
-                      }}
-                      className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
-                    >
-                      ✨ Upgrade to Premium
-                    </button>
+                    <div className="px-4 py-2 bg-[#21262D] border border-[#30363D] text-[#8B949E] text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm select-none">
+                      ⚡ Coming Soon
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -483,7 +462,7 @@ export default function Dashboard({
                 <button
                   onClick={() => {
                     if (!canExportReport) {
-                      alert('PDF Report exporting requires a Premium subscription. Please upgrade to unlock.');
+                      toast.error('PDF Report exporting requires a Premium subscription. Please upgrade to unlock.');
                       return;
                     }
                     // Save the current analysis result in cache for fast preview load

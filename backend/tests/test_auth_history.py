@@ -119,6 +119,7 @@ def test_paginated_history():
     headers = {"Authorization": "Bearer mock-token-test@example.com"}
     
     user_uuid = "00000000-0000-0000-0000-000000000000"
+    supabase_service._mock_resumes.clear()
 
     # Populate 15 mockup resumes
     for i in range(15):
@@ -131,18 +132,15 @@ def test_paginated_history():
             phone="12345"
         )
 
-    # 1. Fetch first page
+    # 1. Fetch history (should be capped at 10 items due to automatic soft-pruning)
     history_res = client.get("/history?page=1&limit=10", headers=headers)
     assert history_res.status_code == 200
     data = history_res.json()
     assert len(data["items"]) == 10
-    assert data["total"] == 15
+    assert data["total"] == 10
     assert data["page"] == 1
-    assert data["pages"] == 2
+    assert data["pages"] == 1
 
-    # 2. Fetch second page
-    history_res2 = client.get("/history?page=2&limit=10", headers=headers)
-    assert history_res2.status_code == 200
-    data2 = history_res2.json()
-    assert len(data2["items"]) == 5
-    assert data2["page"] == 2
+    # Verify that the oldest 5 resumes are soft deleted (is_deleted is True)
+    soft_deleted_count = sum(1 for r in supabase_service._mock_resumes.values() if r.get("is_deleted") is True)
+    assert soft_deleted_count == 5

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey, text, func, JSON
+from sqlalchemy import Column, String, DateTime, Text, ForeignKey, text, func, JSON, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from app.models.base import Base
@@ -21,4 +21,5 @@ class Resume(Base):
     name = Column(String(255), nullable=True)
     jd_text = Column(Text, nullable=True)
     recommendations = Column(JSON, nullable=True)
+    is_deleted = Column(Boolean, default=False, server_default="false", nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

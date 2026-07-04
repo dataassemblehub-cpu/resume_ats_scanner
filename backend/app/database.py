@@ -42,6 +42,7 @@ def init_db():
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_ai_generation_at TIMESTAMP;"))
                 conn.execute(text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS jd_text TEXT;"))
                 conn.execute(text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS recommendations JSONB;"))
+                conn.execute(text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
                 conn.commit()
                 logger.info("Database migration check: successfully ensured new auth, plans, and recommendations columns exist.")
         except Exception as alt_err:

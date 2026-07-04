@@ -165,11 +165,11 @@ export default function Dashboard({
               ATS
             </div>
             <div>
-              <h1 className="text-sm font-extrabold text-white tracking-wider uppercase">
-                ATS Scanner
+              <h1 className="text-xs font-extrabold text-white tracking-tight uppercase">
+                AI Resume Scanner
               </h1>
-              <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">
-                Optimizer Portal
+              <p className="text-[8px] text-gray-500 font-bold uppercase tracking-wide mt-0.5">
+                ATS scoring & optimization engine
               </p>
             </div>
           </div>

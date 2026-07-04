@@ -102,17 +102,19 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Resume Upload Box */}
+      {/* Resume Upload Box (Made larger and taller) */}
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-gray-300">Resume Upload (.pdf, .docx)</label>
+        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+          Resume Upload (.pdf, .docx)
+        </label>
         <div
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleResumeDrop}
           onClick={() => resumeInputRef.current?.click()}
-          className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 cursor-pointer transition-all duration-200 ${
+          className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl py-14 px-8 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
             resumeFile 
-              ? 'border-teal-500/50 bg-teal-500/5' 
-              : 'border-white/10 bg-white/5 hover:border-white/20'
+              ? 'border-sky-500/50 bg-sky-500/5' 
+              : 'border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] hover:border-sky-500/30'
           }`}
         >
           <input
@@ -126,43 +128,51 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
             accept=".pdf,.docx"
             className="hidden"
           />
-          <svg
-            className={`w-12 h-12 mb-3 ${resumeFile ? 'text-teal-400' : 'text-gray-400'}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="1.5"
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-            />
-          </svg>
+          
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 ${
+            resumeFile ? 'bg-sky-500/10 text-sky-400 scale-110' : 'bg-white/5 text-gray-400 group-hover:text-white'
+          }`}>
+            <svg
+              className="w-7 h-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth="1.75"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+          </div>
+          
           {resumeFile ? (
-            <div className="text-center">
-              <p className="font-semibold text-teal-400 text-sm truncate max-w-xs">{resumeFile.name}</p>
-              <p className="text-xs text-gray-400 mt-1">{(resumeFile.size / 1024).toFixed(1)} KB</p>
+            <div className="text-center z-10">
+              <p className="font-semibold text-sky-400 text-sm truncate max-w-xs">{resumeFile.name}</p>
+              <p className="text-[10px] text-gray-500 mt-1 font-mono">{(resumeFile.size / 1024).toFixed(1)} KB</p>
             </div>
           ) : (
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-300">Drag & drop your resume, or browse</p>
-              <p className="text-xs text-gray-500 mt-1">Supports PDF & DOCX formats</p>
+            <div className="text-center z-10">
+              <p className="text-sm font-semibold text-gray-200">Drag & drop your resume, or <span className="text-sky-400 group-hover:text-sky-300 transition-colors">browse</span></p>
+              <p className="text-xs text-gray-500 mt-1.5">Supports PDF & DOCX formats up to 10MB</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Job Description Input */}
+      {/* Job Description Input (Made larger and taller) */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-semibold text-gray-300 font-sans">Job Description (JD)</label>
-          <div className="flex rounded-lg bg-white/5 p-1 border border-white/5">
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            Job Description (JD)
+          </label>
+          <div className="flex rounded-xl bg-white/5 p-1 border border-white/5">
             <button
               type="button"
               onClick={() => setJdMode('text')}
-              className={`text-xs px-3 py-1 rounded-md transition-all ${
-                jdMode === 'text' ? 'bg-sky-500/20 text-sky-400 font-medium' : 'text-gray-400'
+              className={`text-xs px-3.5 py-1.5 rounded-lg transition-all font-semibold cursor-pointer ${
+                jdMode === 'text' ? 'bg-sky-500/20 text-sky-400 shadow-sm' : 'text-gray-400 hover:text-white'
               }`}
             >
               Paste Text
@@ -170,8 +180,8 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
             <button
               type="button"
               onClick={() => setJdMode('file')}
-              className={`text-xs px-3 py-1 rounded-md transition-all ${
-                jdMode === 'file' ? 'bg-sky-500/20 text-sky-400 font-medium' : 'text-gray-400'
+              className={`text-xs px-3.5 py-1.5 rounded-lg transition-all font-semibold cursor-pointer ${
+                jdMode === 'file' ? 'bg-sky-500/20 text-sky-400 shadow-sm' : 'text-gray-400 hover:text-white'
               }`}
             >
               Upload File
@@ -183,16 +193,16 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
           <textarea
             value={jdText}
             onChange={(e) => setJdText(e.target.value)}
-            placeholder="Paste the target job description requirements here..."
-            className="w-full h-40 bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/50 resize-none font-sans"
+            placeholder="Paste the target job description requirements here to calculate keywords and semantic relevance scores..."
+            className="w-full h-48 bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-sky-500/30 focus:ring-1 focus:ring-sky-500/20 resize-none font-sans transition-all"
           />
         ) : (
           <div
             onClick={() => jdInputRef.current?.click()}
-            className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-all duration-200 ${
+            className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl py-10 px-8 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
               jdFile 
-                ? 'border-sky-500/50 bg-sky-500/5' 
-                : 'border-white/10 bg-white/5 hover:border-white/20'
+                ? 'border-violet-500/50 bg-violet-500/5' 
+                : 'border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] hover:border-violet-500/30'
             }`}
           >
             <input
@@ -206,59 +216,64 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
               accept=".pdf,.docx,.txt"
               className="hidden"
             />
-            <svg
-              className={`w-10 h-10 mb-2 ${jdFile ? 'text-sky-400' : 'text-gray-400'}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
+            
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-all duration-300 ${
+              jdFile ? 'bg-violet-500/10 text-violet-400 scale-110' : 'bg-white/5 text-gray-400 group-hover:text-white'
+            }`}>
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth="1.75"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            
             {jdFile ? (
-              <div className="text-center">
-                <p className="font-semibold text-sky-400 text-sm truncate max-w-xs">{jdFile.name}</p>
-                <p className="text-xs text-gray-400 mt-1">{(jdFile.size / 1024).toFixed(1)} KB</p>
+              <div className="text-center z-10">
+                <p className="font-semibold text-violet-400 text-sm truncate max-w-xs">{jdFile.name}</p>
+                <p className="text-[10px] text-gray-500 mt-1 font-mono">{(jdFile.size / 1024).toFixed(1)} KB</p>
               </div>
             ) : (
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-300">Upload JD file (.txt, .pdf, .docx)</p>
-                <p className="text-xs text-gray-500 mt-1">Supports plain text or office documents</p>
+              <div className="text-center z-10">
+                <p className="text-sm font-semibold text-gray-200">Upload JD file (.txt, .pdf, .docx)</p>
+                <p className="text-xs text-gray-500 mt-1.5">Supports text/plain or office documents</p>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Action Button */}
+      {/* Action Button (Polished visual states) */}
       <button
         onClick={handleScan}
         disabled={isProcessing || !resumeFile || (jdMode === 'text' ? !jdText.trim() : !jdFile)}
-        className="btn-primary flex items-center justify-center gap-2 mt-2 py-3.5"
+        className="w-full mt-2 py-4 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-sky-500/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-95 duration-150"
       >
         {isProcessing ? (
           <>
-            <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            Processing Scan...
+            <span>Analyzing Resume...</span>
           </>
         ) : (
           <>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth="2"
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
               />
             </svg>
-            Scan Resume & Calculate Match
+            <span>Analyze Resume & Match</span>
           </>
         )}
       </button>

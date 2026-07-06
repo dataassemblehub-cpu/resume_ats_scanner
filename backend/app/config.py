@@ -6,14 +6,14 @@ class Settings(BaseSettings):
     SUPABASE_URL: str | None = None
     SUPABASE_KEY: str | None = None
     DATABASE_URL: str | None = None
-    PORT: int = 8000
+    PORT: int | None = None
     HOST: str = "0.0.0.0"
     ENV: str = "production"
     
     # Gemini API Settings
     GEMINI_API_KEY: str | None = None
-    GEMINI_MODEL: str = "gemini-2.5-flash"
-    GEMINI_FALLBACK_MODELS: str = "gemini-2.5-flash-lite,gemini-flash-lite-latest"
+    GEMINI_MODEL: str | None = None
+    GEMINI_FALLBACK_MODELS: str | None = None
 
     # Testing & Debug bypass toggles
     BYPASS_AUTH: bool = False

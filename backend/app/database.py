@@ -11,9 +11,18 @@ SessionLocal = None
 if settings.DATABASE_URL:
     try:
         # pool_pre_ping checks the connection validity before executing queries
-        engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
+        # connect_timeout=10 ensures that the connection fails fast if the DB is unreachable
+        connect_args = {}
+        if settings.DATABASE_URL.startswith("postgresql"):
+            connect_args["connect_timeout"] = 10
+            
+        engine = create_engine(
+            settings.DATABASE_URL, 
+            pool_pre_ping=True, 
+            connect_args=connect_args
+        )
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-        logger.info("SQLAlchemy database connection successfully configured.")
+        logger.info("SQLAlchemy database connection successfully configured with timeout.")
     except Exception as e:
         logger.error(f"Failed to initialize SQLAlchemy database engine: {str(e)}")
 else:

@@ -11,10 +11,11 @@ SessionLocal = None
 if settings.DATABASE_URL:
     try:
         # pool_pre_ping checks the connection validity before executing queries
-        # connect_timeout=10 ensures that the connection fails fast if the DB is unreachable
+        # connect_timeout=10 and statement_timeout=15000 ensure connection/query hangs fail fast
         connect_args = {}
-        if settings.DATABASE_URL.startswith("postgresql"):
+        if settings.DATABASE_URL.startswith("postgresql") or settings.DATABASE_URL.startswith("postgres"):
             connect_args["connect_timeout"] = 10
+            connect_args["options"] = "-c statement_timeout=15000"
             
         engine = create_engine(
             settings.DATABASE_URL, 

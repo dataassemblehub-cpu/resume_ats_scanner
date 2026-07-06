@@ -1,3 +1,11 @@
+import sys
+# Force unbuffered stdout/stderr to ensure Render logs flush instantly
+try:
+    sys.stdout.reconfigure(write_through=True)
+    sys.stderr.reconfigure(write_through=True)
+except Exception:
+    pass
+
 import uvicorn
 from app.config import settings
 from app.main import app  # Export app to support direct 'main:app' module imports on Render

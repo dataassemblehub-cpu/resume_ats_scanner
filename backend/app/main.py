@@ -17,14 +17,19 @@ app = FastAPI(
 # Run database schema auto-migrations on startup
 @app.on_event("startup")
 def on_startup():
+    logger.info("Startup: executing database schema auto-migrations...")
     init_db()
+    logger.info("Startup: database migrations complete.")
     try:
         from app.services.supabase_service import SupabaseService
         service = SupabaseService()
         if service.is_configured:
+            logger.info("Startup: verifying Supabase resumes storage bucket...")
             service.ensure_bucket_exists("resumes")
+            logger.info("Startup: storage bucket verified.")
     except Exception as e:
         logger.warning(f"Failed to auto-ensure storage buckets on startup: {str(e)}")
+    logger.info("Startup: all hooks completed successfully.")
 
 # Request logging middleware writing stats to app.log
 @app.middleware("http")

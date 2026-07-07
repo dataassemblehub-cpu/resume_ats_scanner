@@ -232,6 +232,12 @@ export default function Home() {
       analysisResult.resumeDetails.id
     );
 
+    // If quota is exhausted or feature requires premium, show an alert popup and preserve previous suggestions
+    if (recs.status === 'unavailable' && recs.message && (recs.message.includes('exhausted') || recs.message.includes('Premium') || recs.message.includes('quota'))) {
+      alert("You have exhausted your free trial. This feature requires Premium.");
+      return;
+    }
+
     const finalResult = {
       ...analysisResult,
       resumeDetails: {

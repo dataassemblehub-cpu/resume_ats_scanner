@@ -247,10 +247,9 @@ export default function OverviewSection({
         <div className="flex flex-col gap-4">
           {[
             { name: 'Skills Match', score: score.skills, key: 'skills', weight: '40%', color: 'from-teal-500 to-emerald-500' },
-            { name: 'Experience Match', score: score.experience, key: 'experience', weight: '20%', color: 'from-violet-500 to-purple-500' },
-            { name: 'Projects Match', score: score.projects, key: 'projects', weight: '20%', color: 'from-sky-500 to-blue-500' },
+            { name: 'Experience Match', score: score.experience, key: 'experience', weight: '40%', color: 'from-violet-500 to-purple-500' },
+            { name: 'Projects Match', score: score.projects, key: 'projects', weight: '10%', color: 'from-sky-500 to-blue-500' },
             { name: 'Education Match', score: score.education, key: 'education', weight: '10%', color: 'from-green-500 to-teal-500' },
-            { name: 'Formatting Quality', score: formattingPercentage, key: 'formatting', weight: '10%', color: 'from-amber-500 to-orange-500' },
           ].map((cat) => (
             <div key={cat.name} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <span className="font-semibold text-gray-300 w-36 shrink-0">{cat.name}</span>

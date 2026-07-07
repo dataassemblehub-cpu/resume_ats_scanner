@@ -16,9 +16,19 @@ async def get_history(
     user: dict = Depends(get_current_user)
 ):
     try:
-        paginated_history = supabase_service.get_user_by_uuid(user["id"])
-        if not paginated_history:
+        user_record = supabase_service.get_user_by_uuid(user["id"])
+        if not user_record:
             raise HTTPException(status_code=404, detail="User record not found.")
+            
+        # Only return history if the user is registered and logged in (has password credentials)
+        if not user_record.get("password_hash"):
+            return {
+                "items": [],
+                "total": 0,
+                "page": page,
+                "limit": limit,
+                "pages": 1
+            }
             
         return supabase_service.get_user_history_paginated(user["id"], page, limit)
     except Exception as e:

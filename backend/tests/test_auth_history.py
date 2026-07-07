@@ -21,7 +21,7 @@ def setup_mock_db():
         "subscription_plan": "free",
         "ai_generation_count": 0,
         "last_ai_generation_at": None,
-        "password_hash": None
+        "password_hash": "mocked_password_hash_12345"
     }
     
     # Store initial settings

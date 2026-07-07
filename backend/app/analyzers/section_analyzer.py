@@ -94,19 +94,18 @@ class SectionAnalyzer:
         # 3. Sort section detections by offset
         detected_sections.sort(key=lambda x: x["start"])
 
-        # Deduplicate sequential matches for the same category (keep the first one)
+        # Deduplicate consecutive/adjacent identical category headers (e.g. if matched twice sequentially)
+        # but KEEP separate physical boundaries for different occurrences to avoid section swallowing
         deduped = []
-        seen_categories = set()
-        for sec in detected_sections:
-            if sec["category"] not in seen_categories:
+        for idx, sec in enumerate(detected_sections):
+            if idx == 0 or sec["category"] != detected_sections[idx - 1]["category"]:
                 deduped.append(sec)
-                seen_categories.add(sec["category"])
         detected_sections = deduped
 
         # 4. Extract section texts based on boundaries
         sections_detected = {cat: False for cat in SECTION_PATTERNS.keys()}
         section_offsets = {}
-        section_text = {}
+        section_text = {cat: "" for cat in SECTION_PATTERNS.keys()}
         
         text_length = len(text)
         
@@ -120,9 +119,18 @@ class SectionAnalyzer:
             else:
                 end_idx = text_length
                 
+            content = text[start_idx:end_idx].strip()
+            
             sections_detected[category] = True
-            section_offsets[category] = [sec["start"], end_idx]
-            section_text[category] = text[start_idx:end_idx].strip()
+            if category not in section_offsets:
+                section_offsets[category] = [sec["start"], end_idx]
+            else:
+                section_offsets[category][1] = end_idx # Expand boundary range
+                
+            if section_text[category]:
+                section_text[category] += "\n\n" + content
+            else:
+                section_text[category] = content
 
         # 5. NLP Fallback: If critical sections are missing, search in raw text
         # If 'skills' is missing, look for blocks containing high concentration of skills

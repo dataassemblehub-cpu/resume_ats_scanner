@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ComprehensiveAnalysisResult, getAIRecommendations, AIRecommendationsResult } from '@/lib/api';
 import OverviewSection from './OverviewSection';
 import SectionChecks from './SectionChecks';
@@ -8,8 +9,9 @@ import SuggestionsSection from './SuggestionsSection';
 import HistorySection from './HistorySection';
 import AuthModal from './AuthModal';
 import { useAuth, useEntitlements } from '@/lib/auth';
-import { TabType } from '../app/page';
 import { toast } from 'react-hot-toast';
+
+export type TabType = 'overview' | 'keywords' | 'formatting' | 'ai-suggestions' | 'history' | 'exports';
 
 interface DashboardProps {
   result: ComprehensiveAnalysisResult;
@@ -41,8 +43,17 @@ export default function Dashboard({
   onRegenerateSuggestions,
   onLoadScan
 }: DashboardProps) {
+  const router = useRouter();
   const { user, logout, upgradeAccount } = useAuth();
   const { canGenerateAI, canExportReport, isPremium, plan } = useEntitlements();
+
+  const handleTabClick = (key: TabType) => {
+    if (key === 'history') {
+      router.push('/history');
+    } else {
+      setActiveTab(key);
+    }
+  };
   const [recommendations, setRecommendations] = useState<AIRecommendationsResult | undefined>(result.recommendations);
   const [isGenerating, setIsGenerating] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -239,7 +250,7 @@ export default function Dashboard({
             {tabs.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => handleTabClick(tab.key)}
                 className={`sidebar-button ${activeTab === tab.key ? 'active' : ''}`}
               >
                 {tab.icon}
@@ -524,7 +535,7 @@ export default function Dashboard({
         {tabs.slice(0, 4).map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => handleTabClick(tab.key)}
             className={`mobile-nav-button ${activeTab === tab.key ? 'active' : ''}`}
           >
             {tab.icon}

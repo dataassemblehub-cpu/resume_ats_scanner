@@ -278,13 +278,13 @@ export async function getUserUsage(): Promise<{ plan: string, ai_generation_coun
 // HISTORY SERVICES
 // ==========================================
 export async function getUserHistory(page: number = 1, limit: number = 10): Promise<HistoryListResponse> {
-  return getJSON(`/history?page=${page}&limit=${limit}`);
+  return getJSON(`/scans?page=${page}&limit=${limit}`);
 }
 
 export async function getHistoryDetail(resumeId: string): Promise<any> {
-  return getJSON(`/history/${resumeId}`);
+  return getJSON(`/scans/${resumeId}`);
 }
 
 export async function deleteHistoryItem(resumeId: string): Promise<{ status: string, message: string }> {
-  return deleteJSON(`/history/${resumeId}`);
+  return deleteJSON(`/scans/${resumeId}`);
 }

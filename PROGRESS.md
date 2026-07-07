@@ -91,7 +91,13 @@ This document summarizes the development activities performed phase-wise for the
 * **Scan History Gating**: Secured scan history to display records only for fully registered and logged-in user accounts.
 * **Free Trial Alert Popup**: Added a browser alert prompt when free trial AI suggestions are exhausted on click, preserving previous suggestions on the dashboard screen.
 
+### Phase 11: Next.js Multi-Page URL Routing & Scans Entity Refactoring
+* **Scans Entity API Refactoring**: Renamed backend `/history` routes to `/scans` to represent the core business entity. Refactored pagination, detail lookups, and deletions, and verified them with a new `test_auth_scans.py` test suite.
+* **Next.js Multi-Page App Routing**: Transitioned the frontend SPA into three distinct file-system routes (`/`, `/dashboard/[id]`, and `/history`).
+* **Route Loading, Error & 404 Boundaries**: Added dynamic segment boundaries (`loading.tsx`, `error.tsx`, `not-found.tsx`) inside the `/dashboard/[id]` directory to handle data loading states gracefully.
+* **URL Parameter Validation**: Added tab search parameter validation (`?tab=overview|keywords|formatting|suggestions`) on `/dashboard/[id]` falling back to `"overview"` for invalid requests.
+* **Premium Quota Modal UI**: Implemented a glassmorphic React modal component (`PremiumModal.tsx`) that triggers when trial AI suggestions are exhausted, prompting upgrades directly in the UI.
+
 ---
 
-*Status: All frontend and backend files compile type-safely, unit test suite is 100% green (37/37 tests passed), and self-healing storage bucket initialization is active on startup.*
-
+*Status: All frontend and backend files compile type-safely, Next.js production builds compile with zero errors, unit test suite is 100% green (37/37 tests passed), and self-healing storage bucket initialization is active on startup.*

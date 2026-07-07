@@ -62,7 +62,7 @@ class ATSScoreEngine:
         else:
             projects_score = 0.0
 
-        # 4. Education Score (Hybrid: Degree level matching + TF-IDF fallback)
+        # 4. Education Score (Hybrid: Standardized Degree level matching + TF-IDF fallback)
         resume_edu = section_text.get("education", "").strip()
         education_exists = bool(resume_edu)
         if education_exists:
@@ -75,26 +75,40 @@ class ATSScoreEngine:
             else:
                 # Map standardized degrees to numeric levels
                 level_map = {
-                    "Bachelor's Degree": 1,
-                    "Master's Degree": 2,
-                    "MBA": 2,
-                    "Ph.D.": 3
+                    "Associate's Degree": 1,
+                    "Bachelor's Degree": 2,
+                    "Master's Degree": 3,
+                    "MBA": 3,
+                    "Ph.D.": 4
                 }
                 
-                # Retrieve highest degree levels
-                jd_max = max([level_map.get(deg, 0) for deg in jd_edu_list]) if jd_edu_list else 0
-                cand_max = max([level_map.get(deg, 0) for deg in candidate_edu_list]) if candidate_edu_list else 0
+                # Check if we have recognized standard levels on both sides
+                jd_levels = [level_map[deg] for deg in jd_edu_list if deg in level_map]
+                cand_levels = [level_map[deg] for deg in candidate_edu_list if deg in level_map]
                 
-                if cand_max >= jd_max and cand_max > 0:
-                    education_score = 100.0
-                elif cand_max > 0:
-                    # Candidate has a degree, but it is lower than required (e.g. Bachelor's vs Master's)
-                    education_score = 60.0
+                if jd_levels and cand_levels:
+                    jd_max = max(jd_levels)
+                    cand_max = max(cand_levels)
+                    
+                    if cand_max >= jd_max:
+                        # Candidate meets or exceeds the required level
+                        education_score = 100.0
+                    else:
+                        # Graduated partial score based on gap size
+                        gap = jd_max - cand_max
+                        if gap == 1:
+                            education_score = 70.0  # e.g., Bachelor's applying for Master's
+                        elif gap == 2:
+                            education_score = 40.0  # e.g., Associate's for Master's, or Bachelor's for Ph.D.
+                        else:
+                            education_score = 20.0  # e.g., Associate's for Ph.D.
                 else:
-                    # Fallback to lexical text similarity if no standardized degree is detected
+                    # Fallback to lexical TF-IDF similarity if degrees are non-standard/unrecognized
+                    # We establish a baseline minimum of 40% if the candidate has an education section
+                    # to prevent harsh word-choice penalties (e.g. for non-standard diplomas or bootcamps)
                     jd_edu_text = " ".join(jd_edu_list)
                     edu_res = self.semantic_analyzer.analyze_similarity(resume_edu, jd_edu_text)
-                    education_score = edu_res["semantic_score"]
+                    education_score = max(40.0, edu_res["semantic_score"])
             
             available_scores.append(education_score)
             available_weights.append(0.1)

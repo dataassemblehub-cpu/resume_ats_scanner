@@ -140,11 +140,18 @@ class SupabaseService:
     def create_user_with_hash(self, email: str, password_hash: str) -> dict:
         """
         Signs up a new user with password credentials.
+        If a placeholder record already exists (created by anonymous scans, i.e. password_hash is empty),
+        it updates that record with the credentials instead of raising an error.
         """
+        existing_user = self.get_user_by_email(email)
+        
         if not self.is_configured:
-            # Check unique constraint
-            if self.get_user_by_email(email):
-                raise ValueError("A user with this email address already exists.")
+            if existing_user:
+                if existing_user.get("password_hash"):
+                    raise ValueError("A user with this email address already exists.")
+                # Update existing mock placeholder
+                existing_user["password_hash"] = password_hash
+                return existing_user
             
             new_id = str(uuid.uuid4())
             new_user = {
@@ -159,8 +166,18 @@ class SupabaseService:
             return new_user
 
         try:
-            if self.get_user_by_email(email):
-                raise ValueError("A user with this email address already exists.")
+            if existing_user:
+                if existing_user.get("password_hash"):
+                    raise ValueError("A user with this email address already exists.")
+                
+                # Update existing placeholder database record
+                response = self.client.table("users").update({
+                    "password_hash": password_hash
+                }).eq("id", existing_user["id"]).execute()
+                
+                if response.data:
+                    return response.data[0]
+                raise RuntimeError("Database error updating existing user credentials.")
                 
             payload = {
                 "email": email,

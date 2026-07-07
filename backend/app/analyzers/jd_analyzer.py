@@ -31,7 +31,7 @@ COMMON_TOOLS = [
 
 DEGREE_PATTERNS = [
     r"\bB\.?S\.?\b", r"\bM\.?S\.?\b", r"\bPh\.?D\.?\b", r"\bB\.?E\.?\b", r"\bB\.?Tech\.?\b",
-    r"\bM\.?Tech\.?\b", r"\bM\.?B\.?A\.?\b", r"\bBachelor's?\b", r"\bMaster's?\b", r"\bDoctorate\b"
+    r"\bM\.?Tech\.?\b", r"\bM\.?B\.?A\.?\b", r"\bBachelor['’]?s?\b", r"\bMaster['’]?s?\b", r"\bDoctorate\b"
 ]
 
 # Common verbs that open responsibility bullet points

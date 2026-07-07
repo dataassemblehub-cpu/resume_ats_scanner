@@ -41,7 +41,8 @@ class SectionAnalyzer:
     def _ensure_nlp(self):
         if self.nlp is None:
             try:
-                self.nlp = spacy.load("en_core_web_sm")
+                from app.utils.nlp import load_spacy_model_safely
+                self.nlp = load_spacy_model_safely("en_core_web_sm")
             except Exception as e:
                 # Log warning and keep going (fallback will use pure regex/python if spacy is not loaded)
                 print(f"Warning: spaCy model not loaded in SectionAnalyzer: {str(e)}")

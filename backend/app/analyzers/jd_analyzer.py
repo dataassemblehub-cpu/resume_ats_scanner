@@ -9,7 +9,10 @@ COMMON_SKILLS = [
     "oop", "data structures", "algorithms", "rest api", "graphql", "microservices", "ci/cd", "devops",
     "agile", "scrum", "cloud computing", "machine learning", "deep learning", "natural language processing",
     "nlp", "data science", "data analysis", "data engineering", "unit testing", "test driven development",
-    "tdd", "version control", "responsive design", "state management", "cybersecurity", "ui/ux design"
+    "tdd", "version control", "responsive design", "state management", "cybersecurity", "ui/ux design",
+    "etl", "elt", "data warehousing", "data warehouse", "star schema", "snowflake schema", "fact table",
+    "dimension table", "stored procedures", "dax", "medallion architecture", "data modeling",
+    "pipeline orchestration", "workflow orchestration", "delta lake", "data quality", "data governance"
 ]
 
 COMMON_TOOLS = [
@@ -22,11 +25,14 @@ COMMON_TOOLS = [
     "numpy", "scikit-learn", "tensorflow", "pytorch", "keras", "spacy", "nltk",
     # Databases & Caching
     "postgresql", "postgres", "mysql", "mongodb", "redis", "dynamodb", "sqlite", "oracle", "cassandra",
+    "snowflake", "dbt", "databricks", "apache spark", "pyspark", "spark",
     # Cloud & DevOps
     "aws", "amazon web services", "azure", "gcp", "google cloud", "docker", "kubernetes", "terraform",
     "jenkins", "github actions", "gitlab ci", "ansible",
     # Systems & Utilities
-    "git", "github", "gitlab", "bitbucket", "jira", "confluence", "figma", "postman", "swagger"
+    "git", "github", "gitlab", "bitbucket", "jira", "confluence", "figma", "postman", "swagger",
+    # ETL & BI Tools
+    "power bi", "informatica", "datastage", "snaplogic", "airflow", "azure data factory", "adf", "json", "xml"
 ]
 
 DEGREE_PATTERNS = [
@@ -163,6 +169,13 @@ class JDAnalyzer:
         # Expand matched degree tokens to capture their basic lines/fields
         for match in matches:
             degree = match.group(0)
+            
+            # Prevent 'be' collision (only allow BE or B.E. capitalized)
+            if degree.lower() == "be":
+                original_text = text[match.start():match.end()]
+                if original_text != "BE" and original_text != "B.E.":
+                    continue
+            
             # Standardize degrees
             deg_lower = degree.lower()
             if "b.s" in deg_lower or "bachelor" in deg_lower or "b.e" in deg_lower or "b.tech" in deg_lower:
@@ -242,5 +255,5 @@ class JDAnalyzer:
                 if len(sent) > 0 and sent[0].pos_ == "VERB" and sent[0].text.lower() in ACTION_VERBS:
                     responsibilities.append(sent_text)
                     
-        # Return top 10 responsibilities max to avoid bloating response
-        return responsibilities[:10]
+        # Return top 25 responsibilities max to avoid bloating response and truncation of skills
+        return responsibilities[:25]

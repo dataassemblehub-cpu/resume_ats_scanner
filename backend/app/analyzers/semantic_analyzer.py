@@ -1,6 +1,5 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 
 class SemanticAnalyzer:
     def analyze_similarity(self, resume_text: str, jd_text: str) -> dict:

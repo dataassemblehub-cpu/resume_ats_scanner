@@ -2,15 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.utils.auth_helper import get_current_user
 from app.services.supabase_service import SupabaseService
 
-router = APIRouter(prefix="/history", tags=["Scan History"])
+router = APIRouter(prefix="/scans", tags=["Scans"])
 supabase_service = SupabaseService()
 
 @router.get(
     "",
-    summary="Retrieve paginated scan history",
+    summary="Retrieve paginated scans",
     description="Returns a paginated list of past ATS scans performed by the authenticated user."
 )
-async def get_history(
+async def get_scans(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     limit: int = Query(10, ge=1, le=50, description="Items per page"),
     user: dict = Depends(get_current_user)
@@ -20,7 +20,7 @@ async def get_history(
         if not user_record:
             raise HTTPException(status_code=404, detail="User record not found.")
             
-        # Only return history if the user is registered and logged in (has password credentials)
+        # Only return scans if the user is registered and logged in (has password credentials)
         if not user_record.get("password_hash"):
             return {
                 "items": [],
@@ -39,11 +39,18 @@ async def get_history(
     summary="Retrieve detailed scan results",
     description="Loads full scan details (score, formatting, keywords, recommendations) for a specific historical upload."
 )
-async def get_history_detail(
+async def get_scan_detail(
     resume_id: str,
     user: dict = Depends(get_current_user)
 ):
     try:
+        user_record = supabase_service.get_user_by_uuid(user["id"])
+        if not user_record or not user_record.get("password_hash"):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied. Must be a registered and logged-in user."
+            )
+
         resume = supabase_service.get_resume_by_id(user["id"], resume_id)
         if not resume:
             raise HTTPException(
@@ -60,9 +67,6 @@ async def get_history_detail(
             except Exception:
                 recs = None
                 
-        # Re-construct the structured response representing the scan
-        # Note: formatting analysis needs to be mapped to the saved fields or we mock it.
-        # To make it simple, we can fetch all fields.
         return {
             "resumeDetails": {
                 "id": resume["id"],
@@ -83,13 +87,20 @@ async def get_history_detail(
 @router.delete(
     "/{resume_id}",
     summary="Delete a historical scan record",
-    description="Deletes a past ATS scan from history after confirming user ownership."
+    description="Deletes a past ATS scan from database after confirming user ownership."
 )
-async def delete_history_item(
+async def delete_scan(
     resume_id: str,
     user: dict = Depends(get_current_user)
 ):
     try:
+        user_record = supabase_service.get_user_by_uuid(user["id"])
+        if not user_record or not user_record.get("password_hash"):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied. Must be a registered and logged-in user."
+            )
+
         success = supabase_service.delete_history_by_id(user["id"], resume_id)
         if not success:
             raise HTTPException(

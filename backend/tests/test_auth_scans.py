@@ -112,7 +112,7 @@ def test_upgrade_locked_outside_development():
     assert upgrade_res.json()["user"]["subscription_plan"] == "premium"
     assert upgrade_res.json()["user"]["entitlements"]["can_export_report"] is True
 
-def test_paginated_history():
+def test_paginated_scans():
     # Login as default test user (with mock token auth bypass)
     settings.BYPASS_AUTH = True
     settings.ENV = "development"
@@ -132,10 +132,10 @@ def test_paginated_history():
             phone="12345"
         )
 
-    # 1. Fetch history (should be capped at 10 items due to automatic soft-pruning)
-    history_res = client.get("/history?page=1&limit=10", headers=headers)
-    assert history_res.status_code == 200
-    data = history_res.json()
+    # 1. Fetch scans (should be capped at 10 items due to automatic soft-pruning)
+    scans_res = client.get("/scans?page=1&limit=10", headers=headers)
+    assert scans_res.status_code == 200
+    data = scans_res.json()
     assert len(data["items"]) == 10
     assert data["total"] == 10
     assert data["page"] == 1

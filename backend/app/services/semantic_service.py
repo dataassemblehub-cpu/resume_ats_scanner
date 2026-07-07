@@ -6,7 +6,7 @@ class SemanticAnalyzerService:
 
     async def analyze_semantic_similarity(self, resume_text: str, jd_text: str) -> dict:
         """
-        Validates text and runs semantic analysis using SentenceTransformers.
+        Validates text and runs semantic analysis using TF-IDF cosine similarity.
         """
         r_text = resume_text.strip() if resume_text else ""
         j_text = jd_text.strip() if jd_text else ""

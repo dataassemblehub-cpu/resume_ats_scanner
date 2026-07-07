@@ -14,7 +14,7 @@ def get_semantic_service() -> SemanticAnalyzerService:
     "/semantic",
     response_model=SemanticAnalysisResponse,
     summary="Compute semantic similarity between resume and job description",
-    description="Uses the sentence-transformers all-MiniLM-L6-v2 model to evaluate semantic similarity."
+    description="Uses TF-IDF and cosine similarity metrics to evaluate terms similarity and text compatibility."
 )
 async def analyze_semantic(
     request: SemanticAnalysisRequest,

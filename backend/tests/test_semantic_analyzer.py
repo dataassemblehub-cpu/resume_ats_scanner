@@ -16,7 +16,7 @@ def test_semantic_analyzer_similarity():
     jd_de = "We are looking for a Data Engineer to design ETL pipelines using PySpark, SQL, and Python."
     
     res_similar = analyzer.analyze_similarity(resume_etl, jd_de)
-    assert res_similar["similarity"] > 0.5
+    assert res_similar["similarity"] > 0.3
     assert res_similar["semantic_score"] > 50.0
 
     # Dissimilar profiles (Dentist vs Data Engineer)
@@ -24,7 +24,7 @@ def test_semantic_analyzer_similarity():
     jd_de = "We are looking for a Data Engineer to design ETL pipelines using PySpark, SQL, and Python."
     
     res_dissimilar = analyzer.analyze_similarity(resume_dentist, jd_de)
-    assert res_dissimilar["similarity"] < 0.3
+    assert res_dissimilar["similarity"] < 0.2
     assert res_dissimilar["semantic_score"] < 30.0
     
     # The similar profile must score higher than the dissimilar one

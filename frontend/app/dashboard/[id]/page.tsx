@@ -44,48 +44,61 @@ export default function DashboardPage({ params }: DashboardPageProps) {
 
   useEffect(() => {
     if (authLoading) return;
-    
-    // If user is not authenticated, redirect them to sign-in / landing page
-    if (!user) {
-      router.push('/');
-      return;
-    }
 
     async function loadScanData() {
       try {
         setLoading(true);
         setError(null);
         
-        // 1. Fetch scan base details
-        const scan = await getHistoryDetail(id);
-        if (!scan || !scan.resumeDetails) {
-          setError("Scan record not found.");
-          setLoading(false);
-          return;
-        }
+        if (user) {
+          // 1. Fetch scan base details from database
+          const scan = await getHistoryDetail(id);
+          if (!scan || !scan.resumeDetails) {
+            setError("Scan record not found.");
+            setLoading(false);
+            return;
+          }
 
-        // 2. Perform on-the-fly comparative calculations if jdText exists
-        if (scan.jdText) {
-          const analysis = await runComprehensiveAnalysis(
-            {
-              id: scan.resumeDetails.id,
-              name: scan.resumeDetails.name,
-              email: scan.resumeDetails.email,
-              phone: scan.resumeDetails.phone,
-              parsed_text: scan.resumeDetails.parsed_text
-            },
-            scan.jdText
-          );
+          // 2. Perform on-the-fly comparative calculations if jdText exists
+          if (scan.jdText) {
+            const analysis = await runComprehensiveAnalysis(
+              {
+                id: scan.resumeDetails.id,
+                name: scan.resumeDetails.name,
+                email: scan.resumeDetails.email,
+                phone: scan.resumeDetails.phone,
+                parsed_text: scan.resumeDetails.parsed_text
+              },
+              scan.jdText
+            );
 
-          const finalResult: ComprehensiveAnalysisResult = {
-            ...analysis,
-            jdText: scan.jdText,
-            recommendations: scan.recommendations || undefined
-          };
+            const finalResult: ComprehensiveAnalysisResult = {
+              ...analysis,
+              jdText: scan.jdText,
+              recommendations: scan.recommendations || undefined
+            };
 
-          setResult(finalResult);
+            setResult(finalResult);
+          } else {
+            setError("Job description text is missing for this scan.");
+          }
         } else {
-          setError("Job description text is missing for this scan.");
+          // Anonymous user: load from localStorage
+          const saved = localStorage.getItem('ats_analysis_result');
+          if (saved) {
+            try {
+              const parsed = JSON.parse(saved);
+              if (parsed.resumeDetails && parsed.resumeDetails.id === id) {
+                setResult(parsed);
+                setLoading(false);
+                return;
+              }
+            } catch (e) {
+              console.error("Failed to parse local scan cache", e);
+            }
+          }
+          // Redirect if no local cache matches the dynamic ID
+          router.push('/');
         }
       } catch (err: any) {
         console.error(err);

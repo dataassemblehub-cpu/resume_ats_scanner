@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     
     # Gemini API Settings
     GEMINI_API_KEY: str | None = None
-    GEMINI_MODEL: str = "gemini-1.5-flash"
-    GEMINI_FALLBACK_MODELS: str = "gemini-1.5-pro"
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_FALLBACK_MODELS: str = "gemini-2.0-flash"
 
     # Testing & Debug bypass toggles
     BYPASS_AUTH: bool = False

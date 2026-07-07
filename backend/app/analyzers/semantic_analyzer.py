@@ -1,58 +1,41 @@
-from sentence_transformers import SentenceTransformer, util
-from app.utils.logging_config import logger
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 class SemanticAnalyzer:
-    _model = None
-
-    @classmethod
-    def get_model(cls) -> SentenceTransformer:
-        """
-        Lazy-loads the SentenceTransformer model and caches it.
-        """
-        if cls._model is None:
-            logger.info("Initializing SentenceTransformer model 'all-MiniLM-L6-v2'...")
-            # Automatically downloads to default Hugging Face cache directory if not present
-            cls._model = SentenceTransformer("all-MiniLM-L6-v2")
-            logger.info("SentenceTransformer model successfully loaded.")
-        return cls._model
-
     def analyze_similarity(self, resume_text: str, jd_text: str) -> dict:
         """
-        Calculates cosine similarity and scaled score between resume and job description.
+        Calculates TF-IDF cosine similarity and scaled score between resume and job description.
         """
-        model = self.get_model()
-        
-        # Generate embeddings
-        resume_emb = model.encode(resume_text, convert_to_tensor=True) #convert it to vectors
-        jd_emb = model.encode(jd_text, convert_to_tensor=True) #convert it to vectors
-        
-        # Calculate cosine similarity
-        # -1.0 → opposite meaning
-        # 0.0 → unrelated
-        # 1.0 → identical
-        similarity = float(util.cos_sim(resume_emb, jd_emb).item()) 
-     
-        
-        # Piecewise linear scaling to map raw cosine similarity to realistic score
-        # x is the similarity coefficient (typically between -1.0 and 1.0)
-        # We clamp x to [0.0, 1.0] first
+        try:
+            # Initialize vectorizer with English stop words
+            vectorizer = TfidfVectorizer(stop_words='english')
+            tfidf = vectorizer.fit_transform([resume_text, jd_text])
+            
+            # Calculate cosine similarity
+            similarity = float(cosine_similarity(tfidf[0:1], tfidf[1:2])[0][0])
+        except Exception:
+            similarity = 0.0
+            
+        # Piecewise linear scaling to map TF-IDF similarity to realistic score.
+        # TF-IDF cosine similarities are generally lower than dense embeddings (typically 0.1 to 0.5)
+        # So we scale it appropriately to give a realistic matching percentage (e.g. 60% to 90%)
         x = max(0.0, similarity)
         
-        # Mapping ranges:
-        # x >= 0.7  -->  90 + (x - 0.7) * (10 / 0.3)  [90 to 100]
-        # 0.45 <= x < 0.7  -->  60 + (x - 0.45) * (30 / 0.25)  [60 to 90]
-        # 0.2 <= x < 0.45  -->  20 + (x - 0.2) * (40 / 0.25)   [20 to 60]
-        # x < 0.2   -->  x * (20 / 0.2)                        [0 to 20]
-        if x >= 0.7:
-            score = 90.0 + (x - 0.7) * (10.0 / 0.3)
-        elif x >= 0.45:
-            score = 60.0 + (x - 0.45) * (30.0 / 0.25)
+        # Mapping ranges for TF-IDF similarity:
+        # x >= 0.4  -->  85 + (x - 0.4) * (15 / 0.6)  [85 to 100]
+        # 0.2 <= x < 0.4  -->  60 + (x - 0.2) * (25 / 0.2)  [60 to 85]
+        # 0.05 <= x < 0.2  -->  20 + (x - 0.05) * (40 / 0.15) [20 to 60]
+        # x < 0.05  -->  x * (20 / 0.05)                    [0 to 20]
+        if x >= 0.4:
+            score = 85.0 + (x - 0.4) * (15.0 / 0.6)
         elif x >= 0.2:
-            score = 20.0 + (x - 0.2) * (40.0 / 0.25)
+            score = 60.0 + (x - 0.2) * (25.0 / 0.2)
+        elif x >= 0.05:
+            score = 20.0 + (x - 0.05) * (40.0 / 0.15)
         else:
-            score = x * (20.0 / 0.2)
-
-        # Clamp just in case to [0.0, 100.0]
+            score = x * (20.0 / 0.05)
+            
         score = max(0.0, min(100.0, score))
         
         return {

@@ -17,7 +17,7 @@ def test_ats_score_engine_normalization():
         "section_text": {
             "skills": "Python, SQL, PySpark, AWS, Docker",
             "experience": "Senior Software Engineer. Designed data pipelines and managed cloud infrastructure.",
-            "projects": "ETL orchestration using Airflow. Built web scrapers.",
+            "projects": "Data Engineer ETL orchestration using Airflow. Built web scrapers in Python.",
             "education": "Bachelor of Science in Computer Science"
         },
         "keyword_analysis": {"coverage_percentage": 80.0}

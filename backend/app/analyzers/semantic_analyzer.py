@@ -7,8 +7,8 @@ class SemanticAnalyzer:
         Calculates TF-IDF cosine similarity and scaled score between resume and job description.
         """
         try:
-            # Initialize vectorizer with English stop words
-            vectorizer = TfidfVectorizer(stop_words='english')
+            # Initialize vectorizer with English stop words and (1,2)-grams
+            vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2))
             tfidf = vectorizer.fit_transform([resume_text, jd_text])
             
             # Calculate cosine similarity
@@ -22,18 +22,18 @@ class SemanticAnalyzer:
         x = max(0.0, similarity)
         
         # Mapping ranges for TF-IDF similarity:
-        # x >= 0.35  -->  85 + (x - 0.35) * (15 / 0.65)  [85 to 100]
-        # 0.15 <= x < 0.35  -->  65 + (x - 0.15) * (20 / 0.2)  [65 to 85]
-        # 0.05 <= x < 0.15  -->  35 + (x - 0.05) * (30 / 0.1)  [35 to 65]
-        # x < 0.05  -->  x * (35 / 0.05)                      [0 to 35]
-        if x >= 0.35:
-            score = 85.0 + (x - 0.35) * (15.0 / 0.65)
-        elif x >= 0.15:
-            score = 65.0 + (x - 0.15) * (20.0 / 0.2)
+        # x >= 0.25  -->  80 + (x - 0.25) * (20 / 0.75)  [80 to 100]
+        # 0.12 <= x < 0.25  -->  60 + (x - 0.12) * (20 / 0.13)  [60 to 80]
+        # 0.05 <= x < 0.12  -->  15 + (x - 0.05) * (45 / 0.07)  [15 to 60]
+        # x < 0.05  -->  x * (15 / 0.05)                      [0 to 15]
+        if x >= 0.25:
+            score = 80.0 + (x - 0.25) * (20.0 / 0.75)
+        elif x >= 0.12:
+            score = 60.0 + (x - 0.12) * (20.0 / 0.13)
         elif x >= 0.05:
-            score = 35.0 + (x - 0.05) * (30.0 / 0.1)
+            score = 15.0 + (x - 0.05) * (45.0 / 0.07)
         else:
-            score = x * (35.0 / 0.05)
+            score = x * (15.0 / 0.05)
             
         score = max(0.0, min(100.0, score))
         

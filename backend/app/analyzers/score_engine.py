@@ -62,15 +62,40 @@ class ATSScoreEngine:
         else:
             projects_score = 0.0
 
-        # 4. Education Score
+        # 4. Education Score (Hybrid: Degree level matching + TF-IDF fallback)
         resume_edu = section_text.get("education", "").strip()
         education_exists = bool(resume_edu)
         if education_exists:
             jd_edu_list = jd_data.get("education", [])
-            # Check if education list exists and is non-empty before joining
-            jd_edu_text = " ".join(jd_edu_list) if (jd_edu_list and len(jd_edu_list) > 0) else j_text
-            edu_res = self.semantic_analyzer.analyze_similarity(resume_edu, jd_edu_text)
-            education_score = edu_res["semantic_score"]
+            candidate_edu_list = resume_data.get("education", [])
+            
+            if not jd_edu_list:
+                # No education requirements specified in JD -> 100%
+                education_score = 100.0
+            else:
+                # Map standardized degrees to numeric levels
+                level_map = {
+                    "Bachelor's Degree": 1,
+                    "Master's Degree": 2,
+                    "MBA": 2,
+                    "Ph.D.": 3
+                }
+                
+                # Retrieve highest degree levels
+                jd_max = max([level_map.get(deg, 0) for deg in jd_edu_list]) if jd_edu_list else 0
+                cand_max = max([level_map.get(deg, 0) for deg in candidate_edu_list]) if candidate_edu_list else 0
+                
+                if cand_max >= jd_max and cand_max > 0:
+                    education_score = 100.0
+                elif cand_max > 0:
+                    # Candidate has a degree, but it is lower than required (e.g. Bachelor's vs Master's)
+                    education_score = 60.0
+                else:
+                    # Fallback to lexical text similarity if no standardized degree is detected
+                    jd_edu_text = " ".join(jd_edu_list)
+                    edu_res = self.semantic_analyzer.analyze_similarity(resume_edu, jd_edu_text)
+                    education_score = edu_res["semantic_score"]
+            
             available_scores.append(education_score)
             available_weights.append(0.1)
         else:

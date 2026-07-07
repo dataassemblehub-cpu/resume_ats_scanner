@@ -31,7 +31,15 @@ class ATSScoreEngine:
             skills_semantic = 0.0
 
         keyword_coverage = resume_data.get("keyword_analysis", {}).get("coverage_percentage", 0.0)
-        skills_score = (keyword_coverage * 0.5) + (skills_semantic * 0.5)
+        s_raw = (keyword_coverage * 0.5) + (skills_semantic * 0.5)
+        
+        # Apply lenient matching curve: matching 50%+ on combined metrics represents a strong skills fit
+        if s_raw >= 50.0:
+            skills_score = 80.0 + (s_raw - 50.0) * (20.0 / 50.0)
+        elif s_raw >= 25.0:
+            skills_score = 50.0 + (s_raw - 25.0) * (30.0 / 25.0)
+        else:
+            skills_score = s_raw * (50.0 / 25.0)
         
         if skills_exists:
             available_scores.append(skills_score)

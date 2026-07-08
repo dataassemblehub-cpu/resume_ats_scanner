@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.keyword import KeywordAnalysisRequest, KeywordAnalysisResponse
 from app.services.keyword_service import KeywordAnalyzerService
@@ -24,8 +26,11 @@ async def analyze_keywords(
     service: KeywordAnalyzerService = Depends(get_keyword_service)
 ):
     try:
+        if request.scan_id:
+            logger.info(f"Processing scan {request.scan_id} in /analyze/keywords")
         return await service.analyze_keywords(request.resume_text, request.jd_text)
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

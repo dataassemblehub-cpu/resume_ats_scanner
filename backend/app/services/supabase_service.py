@@ -140,11 +140,18 @@ class SupabaseService:
     def create_user_with_hash(self, email: str, password_hash: str) -> dict:
         """
         Signs up a new user with password credentials.
+        If a placeholder record already exists (created by anonymous scans, i.e. password_hash is empty),
+        it updates that record with the credentials instead of raising an error.
         """
+        existing_user = self.get_user_by_email(email)
+        
         if not self.is_configured:
-            # Check unique constraint
-            if self.get_user_by_email(email):
-                raise ValueError("A user with this email address already exists.")
+            if existing_user:
+                if existing_user.get("password_hash"):
+                    raise ValueError("A user with this email address already exists.")
+                # Update existing mock placeholder
+                existing_user["password_hash"] = password_hash
+                return existing_user
             
             new_id = str(uuid.uuid4())
             new_user = {
@@ -159,8 +166,18 @@ class SupabaseService:
             return new_user
 
         try:
-            if self.get_user_by_email(email):
-                raise ValueError("A user with this email address already exists.")
+            if existing_user:
+                if existing_user.get("password_hash"):
+                    raise ValueError("A user with this email address already exists.")
+                
+                # Update existing placeholder database record
+                response = self.client.table("users").update({
+                    "password_hash": password_hash
+                }).eq("id", existing_user["id"]).execute()
+                
+                if response.data:
+                    return response.data[0]
+                raise RuntimeError("Database error updating existing user credentials.")
                 
             payload = {
                 "email": email,
@@ -282,7 +299,8 @@ class SupabaseService:
         name: str | None, 
         email: str | None, 
         phone: str | None,
-        file_url: str | None = None
+        file_url: str | None = None,
+        jd_text: str | None = None
     ) -> dict:
         """
         Saves parsed resume data into Supabase 'resumes' table and prunes history to latest 10.
@@ -295,6 +313,7 @@ class SupabaseService:
             "email": email,
             "phone": phone,
             "name": name,
+            "jd_text": jd_text,
             "created_at": datetime.now().isoformat()
         }
 
@@ -323,7 +342,8 @@ class SupabaseService:
                 "parsed_text": parsed_text,
                 "email": email,
                 "phone": phone,
-                "name": name
+                "name": name,
+                "jd_text": jd_text
             }).execute()
             if response.data and len(response.data) > 0:
                 inserted_resume = response.data[0]
@@ -486,7 +506,11 @@ class SupabaseService:
 
         try:
             response = self.client.table("resumes").select("*").eq("id", resume_id).eq("user_id", user_uuid).eq("is_deleted", False).execute()
-            return response.data[0] if response.data else None
+            if response.data:
+                res = response.data[0]
+                print(f"GET_RESUME_BY_ID: fetched {resume_id}, jd_text length: {len(res.get('jd_text', '')) if res.get('jd_text') else 0}")
+                return res
+            return None
         except Exception as e:
             raise RuntimeError(f"Failed to fetch resume details: {str(e)}")
 
@@ -510,3 +534,19 @@ class SupabaseService:
         except Exception as e:
             print(f"Warning: Failed to upload file to storage: {str(e)}")
             return None
+
+    def claim_resume(self, resume_id: str, user_uuid: str) -> bool:
+        """
+        Updates the user_id of an existing resume scan, effectively assigning an anonymous scan to a logged-in user.
+        """
+        if not self.is_configured:
+            if resume_id in self._mock_resumes:
+                self._mock_resumes[resume_id]["user_id"] = user_uuid
+                return True
+            return False
+
+        try:
+            response = self.client.table("resumes").update({"user_id": user_uuid}).eq("id", resume_id).execute()
+            return len(response.data) > 0 if response.data else True
+        except Exception as e:
+            raise RuntimeError(f"Failed to claim resume: {str(e)}")

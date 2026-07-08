@@ -6,6 +6,7 @@ def load_spacy_model_safely(model_name: str = "en_core_web_sm"):
     Attempts to load a spaCy model. If E050 Can't find model error occurs,
     automatically downloads it dynamically.
     """
+    import spacy
     try:
         return spacy.load(model_name)
     except OSError:

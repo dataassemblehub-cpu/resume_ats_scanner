@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from app.schemas.recommendation import RecommendationRequest, RecommendationResponse
 from app.services.gemini_recommendation_service import GeminiRecommendationService
 from app.services.ai_recommendation_service import AIRecommendationService
@@ -13,6 +13,18 @@ supabase_service = SupabaseService()
 def get_recommendation_service() -> AIRecommendationService:
     return recommendation_service
 
+async def get_current_user_optional(authorization: str | None = Header(None)) -> dict | None:
+    """
+    Optional helper that resolves the user if credentials are valid, 
+    otherwise returns None without throwing a 401 exception.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    try:
+        return await get_current_user(authorization)
+    except Exception:
+        return None
+
 @router.post(
     "/recommendation", 
     response_model=RecommendationResponse,
@@ -21,9 +33,24 @@ def get_recommendation_service() -> AIRecommendationService:
 )
 async def generate_recommendation(
     request: RecommendationRequest,
-    user: dict = Depends(get_current_user),
+    user: dict | None = Depends(get_current_user_optional),
     service: AIRecommendationService = Depends(get_recommendation_service)
 ):
+    if not user:
+        return {
+            "status": "unavailable",
+            "message": "Please sign in or create a free account to unlock AI-powered recommendations and tailored resume bullet suggestions.",
+            "resume_summary": None,
+            "strengths": [],
+            "weaknesses": [],
+            "missing_skills": [],
+            "ats_improvements": [],
+            "recruiter_improvements": [],
+            "suggested_bullet_points": [],
+            "resume_improvements": [],
+            "ats_recommendations": []
+        }
+
     # Fetch user data to verify AI generation quota
     fresh_user = supabase_service.get_user_by_uuid(user["id"])
     if not fresh_user:

@@ -80,7 +80,24 @@ This document summarizes the development activities performed phase-wise for the
 * **Self-Healing Storage**: Added auto-verification and creation of the `"resumes"` storage bucket on backend startup.
 * **UX Refinements**: Redesigned the scan history refresh button with loading spinners, page bounds safety (automatic fallback to page 1), and toast notifications.
 
+### Phase 10 Refinements & Production Calibrations
+* **Unified Education Matcher**: Refactored the degree matching logic to compare standardized ranks (`Associate's` < `Bachelor's` < `Master's`/`MBA` < `Ph.D.`) with proportional gap scaling (70%/40%/20%) and a `40%` baseline fallback for custom credentials.
+* **Regex Collision & Case Guard**: Resolved the `B.E.`/`be` extraction collision by adding strict case-sensitive checks to ignore the common lowercase verb `"be"` while correctly extracting Bachelor of Engineering degrees.
+* **Keyword-Prioritized Bullet Truncation**: Restructured the responsibilities parser to prioritize bullet points containing recognized skill or tool keywords, guaranteeing high-signal requirements are not lost when truncating to the 10-bullet display limit.
+* **Duplicate Category Bound Repair**: Restructured the boundary parser to treat repeated categories as physical division lines, concatenating their texts rather than letting previous sections swallow subsequent block details.
+* **Model Defaults Alignment**: Set default model chain to `"gemini-2.5-flash"` and `"gemini-2.0-flash"` to align with available API keys, resolving 404 endpoint errors.
+* **Credential-less Placeholder Claiming**: Updated the registration flow to allow users to register and claim credential-less user placeholder records created during anonymous scans.
+* **Friendly Recommendations CTA**: Replaced technical 401 warnings for anonymous recommendation requests with a successful 200 payload containing a user-friendly sign-in call-to-action.
+* **Scan History Gating**: Secured scan history to display records only for fully registered and logged-in user accounts.
+* **Free Trial Alert Popup**: Added a browser alert prompt when free trial AI suggestions are exhausted on click, preserving previous suggestions on the dashboard screen.
+
+### Phase 11: Next.js Multi-Page URL Routing & Scans Entity Refactoring
+* **Scans Entity API Refactoring**: Renamed backend `/history` routes to `/scans` to represent the core business entity. Refactored pagination, detail lookups, and deletions, and verified them with a new `test_auth_scans.py` test suite.
+* **Next.js Multi-Page App Routing**: Transitioned the frontend SPA into three distinct file-system routes (`/`, `/dashboard/[id]`, and `/history`).
+* **Route Loading, Error & 404 Boundaries**: Added dynamic segment boundaries (`loading.tsx`, `error.tsx`, `not-found.tsx`) inside the `/dashboard/[id]` directory to handle data loading states gracefully.
+* **URL Parameter Validation**: Added tab search parameter validation (`?tab=overview|keywords|formatting|suggestions`) on `/dashboard/[id]` falling back to `"overview"` for invalid requests.
+* **Premium Quota Modal UI**: Implemented a glassmorphic React modal component (`PremiumModal.tsx`) that triggers when trial AI suggestions are exhausted, prompting upgrades directly in the UI.
+
 ---
 
-*Status: All frontend files compile type-safely, backend tests are passing successfully, and self-healing storage bucket initialization is active on startup.*
-
+*Status: All frontend and backend files compile type-safely, Next.js production builds compile with zero errors, unit test suite is 100% green (37/37 tests passed), and self-healing storage bucket initialization is active on startup.*

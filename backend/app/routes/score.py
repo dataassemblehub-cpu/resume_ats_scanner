@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.score import ScoreRequest, ScoreResponse
 from app.services.score_service import ScoreService
@@ -24,8 +26,11 @@ async def calculate_score(
     service: ScoreService = Depends(get_score_service)
 ):
     try:
+        if request.scan_id:
+            logger.info(f"Processing scan {request.scan_id} in /analyze/score")
         return await service.calculate_ats_score(request.resume_text, request.jd_text)
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

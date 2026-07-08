@@ -13,9 +13,10 @@ import { toast } from 'react-hot-toast';
 interface HistorySectionProps {
   onLoadScan: (result: ComprehensiveAnalysisResult) => void;
   onSetTab: (tab: 'overview') => void;
+  currentScanId?: string;
 }
 
-export default function HistorySection({ onLoadScan, onSetTab }: HistorySectionProps) {
+export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: HistorySectionProps) {
   const [items, setItems] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -64,14 +65,19 @@ export default function HistorySection({ onLoadScan, onSetTab }: HistorySectionP
       // 2. Perform fast local score analysis
       const analysis = await runComprehensiveAnalysis(
         detail.resumeDetails,
-        detail.jd_text || ''
+        detail.jdText || detail.jd_text || ''
       );
+
+      let recs = detail.recommendations || undefined;
+      if (recs && !recs.status) {
+        recs.status = 'success';
+      }
 
       // 3. Re-inject stored AI recommendations
       const finalResult: ComprehensiveAnalysisResult = {
         ...analysis,
         jdText: detail.jdText || detail.jd_text,
-        recommendations: detail.recommendations || undefined
+        recommendations: recs
       };
 
       // 4. Update parent state
@@ -192,16 +198,25 @@ export default function HistorySection({ onLoadScan, onSetTab }: HistorySectionP
               <tbody className="divide-y divide-white/5 text-xs text-gray-300">
                 {items.map((item) => {
                   const isItemLoading = loadingItemId === item.id;
+                  const isCurrent = String(item.id) === String(currentScanId);
                   return (
-                    <tr key={item.id} className="hover:bg-white/[0.01] transition-all">
+                    <tr 
+                      key={item.id} 
+                      className={`transition-all ${isCurrent ? 'bg-violet-500/10 border-l-2 border-violet-500' : 'hover:bg-white/[0.01]'}`}
+                    >
                       <td className="px-4 py-3.5 font-semibold text-gray-200">
                         <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-violet-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <svg className={`w-4 h-4 shrink-0 ${isCurrent ? 'text-violet-300' : 'text-violet-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                           <span className="truncate max-w-[180px]" title={item.file_name}>
                             {item.file_name}
                           </span>
+                          {isCurrent && (
+                            <span className="ml-2 text-[9px] font-bold text-violet-300 bg-violet-500/20 px-2 py-0.5 rounded border border-violet-500/30 uppercase tracking-wider">
+                              Current
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
@@ -228,10 +243,12 @@ export default function HistorySection({ onLoadScan, onSetTab }: HistorySectionP
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleLoadItem(item.id)}
-                            disabled={isItemLoading}
+                            disabled={isItemLoading || isCurrent}
                             className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all flex items-center gap-1 ${
                               isItemLoading
                                 ? 'bg-violet-500/20 border-violet-500/30 text-violet-300'
+                                : isCurrent
+                                ? 'bg-gray-500/10 border-gray-500/20 text-gray-500 cursor-not-allowed opacity-50'
                                 : 'bg-violet-500/5 hover:bg-violet-500/15 border-violet-500/20 hover:border-violet-400/40 text-violet-300 hover:text-white cursor-pointer active:scale-95'
                             }`}
                           >

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ComprehensiveAnalysisResult, getAIRecommendations, AIRecommendationsResult } from '@/lib/api';
 import OverviewSection from './OverviewSection';
 import SectionChecks from './SectionChecks';
@@ -7,12 +8,14 @@ import FormattingDetails from './FormattingDetails';
 import SuggestionsSection from './SuggestionsSection';
 import HistorySection from './HistorySection';
 import AuthModal from './AuthModal';
+import ScanFlow from './ScanFlow';
 import { useAuth, useEntitlements } from '@/lib/auth';
-import { TabType } from '../app/page';
 import { toast } from 'react-hot-toast';
 
+export type TabType = 'overview' | 'keywords' | 'formatting' | 'ai-suggestions' | 'history' | 'exports' | 'new-scan';
+
 interface DashboardProps {
-  result: ComprehensiveAnalysisResult;
+  result: ComprehensiveAnalysisResult | null;
   onReset: () => void;
   onRecalculate: (newResumeText: string) => void;
   activeTab: TabType;
@@ -41,18 +44,26 @@ export default function Dashboard({
   onRegenerateSuggestions,
   onLoadScan
 }: DashboardProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isRestored = searchParams.get('scan') !== null;
   const { user, logout, upgradeAccount } = useAuth();
   const { canGenerateAI, canExportReport, isPremium, plan } = useEntitlements();
-  const [recommendations, setRecommendations] = useState<AIRecommendationsResult | undefined>(result.recommendations);
+
+  const handleTabClick = (key: TabType) => {
+    setActiveTab(key);
+  };
+  const [recommendations, setRecommendations] = useState<AIRecommendationsResult | undefined>(result?.recommendations);
   const [isGenerating, setIsGenerating] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   // Sync recommendations state when result changes
   useEffect(() => {
-    setRecommendations(result.recommendations);
-  }, [result.recommendations]);
+    setRecommendations(result?.recommendations);
+  }, [result?.recommendations]);
 
   const handleGenerateAI = async () => {
+    if (!result) return;
     setActiveTab('ai-suggestions');
     setIsGenerating(true);
     try {
@@ -179,17 +190,17 @@ export default function Dashboard({
           <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex flex-col gap-3">
             <div>
               <h3 className="text-xs font-bold text-gray-100 truncate">
-                {result.resumeDetails.name || 'Anonymous Candidate'}
+                {result?.resumeDetails?.name || 'Anonymous Candidate'}
               </h3>
               <p className="text-[10px] text-gray-400 truncate mt-0.5">
-                {result.resumeDetails.email || 'No email parsed'}
+                {result?.resumeDetails?.email || 'No email parsed'}
               </p>
             </div>
 
             <div className="border-t border-white/5 pt-2 flex items-center justify-between">
               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Overall Score</span>
               <span className="text-xs font-extrabold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded font-mono">
-                {result.score.overall}%
+                {result?.score?.overall || 0}%
               </span>
             </div>
           </div>
@@ -239,7 +250,7 @@ export default function Dashboard({
             {tabs.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => handleTabClick(tab.key)}
                 className={`sidebar-button ${activeTab === tab.key ? 'active' : ''}`}
               >
                 {tab.icon}
@@ -251,13 +262,13 @@ export default function Dashboard({
 
         {/* Scan Another Button (Sidebar Bottom) */}
         <button
-          onClick={onReset}
-          className="sidebar-button border border-white/5 hover:border-white/10 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-[11px] py-2.5 flex items-center justify-center gap-1.5 rounded-xl transition-all"
+          onClick={() => setActiveTab('new-scan')}
+          className="sidebar-button bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-white font-bold text-[11px] py-2.5 flex items-center justify-center gap-1.5 rounded-xl transition-all shadow-md shadow-sky-500/10 active:scale-95"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          Scan Another
+          Start New Scan
         </button>
       </aside>
 
@@ -269,9 +280,9 @@ export default function Dashboard({
           </div>
           <div className="flex flex-col">
             <span className="text-xs font-bold text-white truncate max-w-[100px]">
-              {result.resumeDetails.name || 'ATS Report'}
+              {result?.resumeDetails?.name || 'ATS Report'}
             </span>
-            <span className="text-[8px] text-gray-400 font-bold">Score: {result.score.overall}%</span>
+            <span className="text-[8px] text-gray-400 font-bold">Score: {result?.score?.overall || 0}%</span>
           </div>
         </div>
 
@@ -301,9 +312,35 @@ export default function Dashboard({
       </header>
 
       {/* 3. DYNAMIC CONTENT MAIN AREA */}
-      <main className="flex-1 overflow-y-auto px-4 py-6 md:p-8 lg:p-10 h-screen max-w-5xl mx-auto w-full pb-24 lg:pb-8">
-        <div className="flex flex-col gap-6">
-          {activeTab === 'overview' && (
+      <main className="flex-1 overflow-y-auto custom-scrollbar relative z-10 scroll-smooth">
+        
+        {/* Historical View Banner */}
+        {isRestored && activeTab !== 'new-scan' && (
+          <div className="bg-gradient-to-r from-violet-500/20 to-sky-500/20 border-b border-violet-500/30 px-6 py-3 flex items-center justify-between backdrop-blur-md sticky top-0 z-30">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">🕰️</span>
+              <p className="text-xs font-medium text-gray-200">
+                You are viewing a historical scan report. Values are read-only.
+              </p>
+            </div>
+            <button
+              onClick={() => setActiveTab('new-scan')}
+              className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-1.5 rounded-lg transition-all"
+            >
+              Start New Scan
+            </button>
+          </div>
+        )}
+
+        <div className="p-4 md:p-8 max-w-6xl mx-auto min-h-full flex flex-col pt-16 lg:pt-8">
+
+          {activeTab === 'new-scan' && (
+            <ScanFlow onScanCompleteAction={(res) => {
+              onLoadScan(res);
+            }} />
+          )}
+
+          {activeTab === 'overview' && result && (
             <div className="flex flex-col gap-6">
               <OverviewSection
                 score={result.score}
@@ -323,11 +360,11 @@ export default function Dashboard({
             </div>
           )}
 
-          {activeTab === 'keywords' && (
+          {activeTab === 'keywords' && result && (
             <KeywordDetails keywords={result.keywords} />
           )}
 
-          {activeTab === 'formatting' && (
+          {activeTab === 'formatting' && result && (
             <FormattingDetails formatting={result.formatting} />
           )}
 
@@ -353,7 +390,7 @@ export default function Dashboard({
                   Sign In / Create Account
                 </button>
               </div>
-            ) : recommendations ? (
+            ) : recommendations && result ? (
               <SuggestionsSection 
                 recommendations={recommendations} 
                 onRecalculate={onRecalculate}
@@ -444,13 +481,35 @@ export default function Dashboard({
                   Sign In / Create Account
                 </button>
               </div>
-            ) : (
-              <HistorySection onLoadScan={onLoadScan} onSetTab={setActiveTab} />
-            )
+            ) : result ? (
+              <HistorySection onLoadScan={onLoadScan} onSetTab={setActiveTab} currentScanId={result.resumeDetails.id} />
+            ) : null
           )}
 
           {activeTab === 'exports' && (
-            <div className="glass-panel p-8 min-h-[300px] flex flex-col gap-6">
+            !user ? (
+              <div className="glass-panel p-12 flex flex-col items-center justify-center text-center gap-6 relative overflow-hidden min-h-[400px]">
+                <div className="absolute w-[300px] h-[300px] bg-gradient-to-r from-violet-500/10 to-sky-500/10 rounded-full blur-[60px] -top-12 -right-12 pointer-events-none" />
+                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/5 text-gray-500">
+                  <svg className="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <div className="flex flex-col gap-2 max-w-sm relative z-10">
+                  <h3 className="text-lg font-bold text-white tracking-tight">Export Options Locked</h3>
+                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                    Downloading PDF reports and extracting plain text requires an authenticated account. Create a free account or sign in to export your results.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setAuthModalOpen(true)}
+                  className="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-sky-500/10 active:scale-95 transition-all relative z-10"
+                >
+                  Sign In / Create Account
+                </button>
+              </div>
+            ) : (
+              <div className="glass-panel p-8 min-h-[300px] flex flex-col gap-6">
               <div>
                 <h3 className="text-sm font-bold text-gray-200 uppercase tracking-wider">Export Analytics</h3>
                 <p className="text-xs text-gray-400 mt-1">
@@ -461,6 +520,7 @@ export default function Dashboard({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   onClick={() => {
+                    if (!result) return;
                     if (!canExportReport) {
                       toast.error('PDF Report exporting requires a Premium subscription. Please upgrade to unlock.');
                       return;
@@ -491,6 +551,7 @@ export default function Dashboard({
 
                 <button
                   onClick={() => {
+                    if (!result) return;
                     const blob = new Blob([result.resumeDetails.parsed_text], { type: 'text/plain' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -515,6 +576,7 @@ export default function Dashboard({
                 </button>
               </div>
             </div>
+            )
           )}
         </div>
       </main>
@@ -524,7 +586,7 @@ export default function Dashboard({
         {tabs.slice(0, 4).map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => handleTabClick(tab.key)}
             className={`mobile-nav-button ${activeTab === tab.key ? 'active' : ''}`}
           >
             {tab.icon}

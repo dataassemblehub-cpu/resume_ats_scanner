@@ -1,7 +1,8 @@
 from pydantic import BaseModel
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 class SectionRequest(BaseModel):
+    scan_id: Optional[str] = None
     text: str
 
 class SectionResponse(BaseModel):

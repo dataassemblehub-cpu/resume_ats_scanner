@@ -14,7 +14,12 @@ class KeywordAnalyzerService:
         if not r_text:
             raise ValueError("Resume text cannot be empty.")
         if not j_text:
-            raise ValueError("Job description text cannot be empty.")
+            return {
+                "matched": [],
+                "missing": [],
+                "coverage_percentage": 0.0,
+                "keyword_frequency": {}
+            }
         if r_text == j_text:
             raise ValueError("Resume and Job Description cannot be identical.")
 

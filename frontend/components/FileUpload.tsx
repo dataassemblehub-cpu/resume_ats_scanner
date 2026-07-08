@@ -85,7 +85,7 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
       }
 
       // 2. Upload and Parse Resume
-      const resumeResult = await uploadResume(resumeFile);
+      const resumeResult = await uploadResume(resumeFile, finalJdText);
 
       if (resumeResult.parsed_text.trim() === finalJdText.trim()) {
         throw new Error('Resume and Job Description cannot be identical.');

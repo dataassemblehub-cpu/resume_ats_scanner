@@ -14,29 +14,38 @@ export const metadata: Metadata = {
   description: "Analyze, parse, and score your resume against Job Descriptions using hybrid semantic & keyword matches.",
 };
 
+import { ThemeProvider } from "@/components/ThemeProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <AuthProvider>
-          <Toaster 
-            position="bottom-right" 
-            toastOptions={{
-              style: {
-                background: '#161B22',
-                color: '#F0F6FC',
-                border: '1px solid #30363D',
-                fontSize: '12px',
-                borderRadius: '8px',
-              },
-            }}
-          />
-          {children}
-        </AuthProvider>
+    <html lang="en" className={`${outfit.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="min-h-full flex flex-col bg-[#0d111d] dark:bg-[#0d111d] text-gray-200">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <Toaster 
+              position="bottom-right" 
+              toastOptions={{
+                style: {
+                  background: '#161B22',
+                  color: '#F0F6FC',
+                  border: '1px solid #30363D',
+                  fontSize: '12px',
+                  borderRadius: '8px',
+                },
+              }}
+            />
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

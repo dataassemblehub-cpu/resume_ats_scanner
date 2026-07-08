@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.formatting import FormattingAnalysisRequest, FormattingAnalysisResponse
 from app.services.formatting_service import FormattingAnalyzerService
@@ -21,8 +23,11 @@ async def analyze_formatting_route(
     service: FormattingAnalyzerService = Depends(get_formatting_service)
 ):
     try:
+        if request.scan_id:
+            logger.info(f"Processing scan {request.scan_id} in /analyze/formatting")
         return await service.analyze_formatting(request.resume_text)
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

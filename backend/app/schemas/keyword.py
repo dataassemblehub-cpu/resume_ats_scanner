@@ -1,7 +1,8 @@
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 class KeywordAnalysisRequest(BaseModel):
+    scan_id: Optional[str] = None
     resume_text: str
     jd_text: str
 

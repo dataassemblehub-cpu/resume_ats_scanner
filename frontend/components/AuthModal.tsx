@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth';
+import { claimScan } from '@/lib/api';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -32,6 +33,54 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
     onClose();
   };
 
+  const handleAuthSuccess = async () => {
+    try {
+      // Check if there's an active anonymous scan to claim
+      const saved = localStorage.getItem('ats_analysis_result');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.resumeDetails && parsed.resumeDetails.id) {
+          await claimScan(parsed.resumeDetails.id);
+          clearForm();
+          onClose();
+          return; // Stay on the current page (likely dashboard or navigating there)
+        }
+      }
+
+      // If no active scan, fetch history and route to latest scan's history tab
+      const { getUserHistory } = await import('@/lib/api');
+      const { useRouter } = await import('next/navigation');
+      const res = await getUserHistory(1, 1);
+      if (res.items && res.items.length > 0) {
+        const { getHistoryDetail, runComprehensiveAnalysis } = await import('@/lib/api');
+        const scan = await getHistoryDetail(res.items[0].id);
+        if (scan && scan.resumeDetails) {
+          const analysis = await runComprehensiveAnalysis(
+            {
+              id: scan.resumeDetails.id,
+              name: scan.resumeDetails.name,
+              email: scan.resumeDetails.email,
+              phone: scan.resumeDetails.phone,
+              parsed_text: scan.resumeDetails.parsed_text
+            },
+            scan.jdText || ''
+          );
+          const finalResult = {
+            ...analysis,
+            jdText: scan.jd_text || scan.jdText,
+            recommendations: scan.recommendations
+          };
+          localStorage.setItem('ats_analysis_result', JSON.stringify(finalResult));
+          window.location.href = `/dashboard?tab=history`;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to handle post-auth routing', e);
+    }
+    clearForm();
+    onClose();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -41,13 +90,10 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
     try {
       if (activeTab === 'login') {
         await login(email, password);
-        clearForm();
-        onClose();
+        await handleAuthSuccess();
       } else if (activeTab === 'register') {
         await register(email, password);
-        clearForm();
-        setSuccessMessage('Registration successful! Please sign in with your credentials.');
-        setActiveTab('login');
+        await handleAuthSuccess();
       }
     } catch (err: any) {
       console.error(err);

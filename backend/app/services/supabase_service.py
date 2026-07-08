@@ -97,7 +97,10 @@ class SupabaseService:
             # Create new user
             insert_response = self.client.table("users").insert({
                 "email": target_email,
-                "subscription_plan": "free"
+                "subscription_plan": "free",
+                "environment": settings.ENV,
+                "created_at": datetime.now().isoformat(),
+                "updated_at": datetime.now().isoformat()
             }).execute()
             if insert_response.data and len(insert_response.data) > 0:
                 return insert_response.data[0]["id"]
@@ -172,7 +175,8 @@ class SupabaseService:
                 
                 # Update existing placeholder database record
                 response = self.client.table("users").update({
-                    "password_hash": password_hash
+                    "password_hash": password_hash,
+                    "updated_at": datetime.now().isoformat()
                 }).eq("id", existing_user["id"]).execute()
                 
                 if response.data:
@@ -183,7 +187,10 @@ class SupabaseService:
                 "email": email,
                 "password_hash": password_hash,
                 "subscription_plan": "free",
-                "ai_generation_count": 0
+                "ai_generation_count": 0,
+                "environment": settings.ENV,
+                "created_at": datetime.now().isoformat(),
+                "updated_at": datetime.now().isoformat()
             }
             response = self.client.table("users").insert(payload).execute()
             if response.data:
@@ -232,7 +239,10 @@ class SupabaseService:
                         "email": temp_email,
                         "subscription_plan": old_user.get("subscription_plan", "free"),
                         "ai_generation_count": old_user.get("ai_generation_count", 0),
-                        "last_ai_generation_at": old_user.get("last_ai_generation_at")
+                        "last_ai_generation_at": old_user.get("last_ai_generation_at"),
+                        "environment": settings.ENV,
+                        "created_at": old_user.get("created_at", datetime.now().isoformat()),
+                        "updated_at": datetime.now().isoformat()
                     }).execute()
                     
                     # 2. Update resumes user_id to new_uuid
@@ -314,7 +324,9 @@ class SupabaseService:
             "phone": phone,
             "name": name,
             "jd_text": jd_text,
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat(),
+            "environment": settings.ENV
         }
 
         if not self.is_configured:
@@ -343,7 +355,10 @@ class SupabaseService:
                 "email": email,
                 "phone": phone,
                 "name": name,
-                "jd_text": jd_text
+                "jd_text": jd_text,
+                "environment": settings.ENV,
+                "created_at": datetime.now().isoformat(),
+                "updated_at": datetime.now().isoformat()
             }).execute()
             if response.data and len(response.data) > 0:
                 inserted_resume = response.data[0]
@@ -399,7 +414,8 @@ class SupabaseService:
         try:
             self.client.table("resumes").update({
                 "jd_text": jd_text,
-                "recommendations": recommendations
+                "recommendations": recommendations,
+                "updated_at": datetime.now().isoformat()
             }).eq("id", resume_id).execute()
         except Exception as e:
             print(f"Warning: Failed to persist recommendations to DB: {str(e)}")

@@ -8,7 +8,7 @@ class ResumeService:
     def __init__(self, supabase_service: SupabaseService):
         self.supabase_service = supabase_service
 
-    async def process_and_save_resume(self, file: UploadFile) -> dict:
+    async def process_and_save_resume(self, file: UploadFile, user_id: str | None = None, jd_text: str | None = None) -> dict:
         """
         Coordinates parsing, contact info extraction, and storage/DB persistence.
         """
@@ -36,8 +36,9 @@ class ResumeService:
 
         # 3. Save to database using Supabase Service
         try:
-            # Get or create a user associated with the extracted email
-            user_id = self.supabase_service.get_or_create_user(email)
+            # Use provided user_id or get/create a user associated with the extracted email
+            if not user_id:
+                user_id = self.supabase_service.get_or_create_user(email)
             
             # Attempt uploading to storage
             file_url = self.supabase_service.upload_file_to_storage(file.filename, content)
@@ -50,7 +51,8 @@ class ResumeService:
                 name=name,
                 email=email,
                 phone=phone,
-                file_url=file_url
+                file_url=file_url,
+                jd_text=jd_text
             )
             
             # Return mapped data matching the ResumeUploadResponse schema

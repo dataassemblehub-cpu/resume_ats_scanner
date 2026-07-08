@@ -1,6 +1,8 @@
 from pydantic import BaseModel
+from typing import Dict, Optional
 
 class ScoreRequest(BaseModel):
+    scan_id: Optional[str] = None
     resume_text: str
     jd_text: str
 

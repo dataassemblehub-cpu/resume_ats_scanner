@@ -10,11 +10,35 @@ class KeywordAnalyzer:
         Extracts top keywords from Job Description using TF-IDF and
         analyzes their presence and frequency in the Resume text.
         """
-        # 1. Clean input texts (lowercase and normalize spacing)
-        cleaned_resume = resume_text.strip().lower()
-        cleaned_jd = jd_text.strip().lower()
+        from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
-        if not cleaned_resume or not cleaned_jd:
+        # Add generic resume/JD words that shouldn't be treated as core skills
+        custom_stop_words = {
+            "strong", "work", "develop", "experience", "years", "skills", "team", 
+            "working", "knowledge", "ability", "proficient", "excellent", "understanding",
+            "environment", "support", "related", "including", "looking", "seeking",
+            "required", "preferred", "role", "responsibilities", "requirements",
+            "candidate", "opportunity", "company", "business", "application",
+            "applications", "systems", "development", "design", "good", "best",
+            "practices", "high", "quality", "using", "used", "new", "help",
+            "build", "building", "create", "creating", "maintain", "maintaining",
+            "ensure", "ensuring", "provide", "providing", "driven", "fast",
+            "paced", "problem", "solving", "communication", "written", "verbal",
+            "degree", "bachelor", "master", "phd", "computer", "science",
+            "engineering", "equivalent", "demonstrated", "track", "record",
+            "proven", "must", "have", "plus", "bonus", "familiarity",
+            "familiar", "hands", "on", "hands-on", "solid", "deep", "data", "engineer", "software"
+        }
+        all_stop_words = list(ENGLISH_STOP_WORDS.union(custom_stop_words))
+
+        # 1. Clean input texts (lowercase and normalize spacing)
+        # We replace punctuation with 'punctbound' to prevent TFIDF from creating bigrams across commas/periods.
+        cleaned_jd_raw = jd_text.lower()
+        cleaned_jd = re.sub(r'[\.,;:\-\|\/\\(\)\[\]\{\}\n\r]+', ' punctbound ', cleaned_jd_raw)
+        
+        cleaned_resume = resume_text.strip().lower()
+
+        if not cleaned_resume or not cleaned_jd_raw.strip():
             return {
                 "matched": [],
                 "missing": [],
@@ -25,7 +49,7 @@ class KeywordAnalyzer:
         # 2. Vectorize the Job Description using TfidfVectorizer
         # We allow both unigrams (single words) and bigrams (two words)
         vectorizer = TfidfVectorizer(
-            stop_words='english', 
+            stop_words=all_stop_words, 
             ngram_range=(1, 2),
             token_pattern=r'(?u)\b[a-zA-Z]{2,}(?:\+[a-zA-Z0-9]+)?\b' # Matches terms like c++, next.js, .net
         )
@@ -44,14 +68,14 @@ class KeywordAnalyzer:
         # Sort by score descending
         term_scores.sort(key=lambda x: x[1], reverse=True)
 
-        # Filter out numbers and duplicates, retaining top N terms
+        # Filter out numbers, duplicates, and our 'punctbound' token, retaining top N terms
         seen_terms = set()
         top_keywords = []
         for term, score in term_scores:
             if len(top_keywords) >= self.top_n:
                 break
-            # Ignore purely numeric terms and very short words
-            if term.isdigit() or len(term) < 2:
+            # Ignore purely numeric terms, very short words, and boundary-crossing bigrams
+            if term.isdigit() or len(term) < 2 or "punctbound" in term:
                 continue
             if term not in seen_terms:
                 seen_terms.add(term)

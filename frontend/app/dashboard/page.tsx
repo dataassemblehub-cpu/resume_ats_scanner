@@ -12,8 +12,7 @@ interface DashboardPageProps {
   }>;
 }
 
-export default function DashboardPage({ params }: DashboardPageProps) {
-  const { id } = React.use(params);
+function DashboardPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
@@ -28,18 +27,27 @@ export default function DashboardPage({ params }: DashboardPageProps) {
     if (tabParam === 'keywords') return 'keywords';
     if (tabParam === 'formatting') return 'formatting';
     if (tabParam === 'suggestions') return 'ai-suggestions';
+    if (tabParam === 'exports') return 'exports';
+    if (tabParam === 'history') return 'history';
+    if (tabParam === 'new-scan') return 'new-scan';
     return 'overview';
   };
 
   const activeTab = getValidatedTab(searchParams.get('tab'));
+  const scanId = searchParams.get('scan');
 
   const handleSetActiveTab = (tab: TabType) => {
     let tabParam = 'overview';
     if (tab === 'keywords') tabParam = 'keywords';
     if (tab === 'formatting') tabParam = 'formatting';
     if (tab === 'ai-suggestions') tabParam = 'suggestions';
+    if (tab === 'exports') tabParam = 'exports';
+    if (tab === 'history') tabParam = 'history';
+    if (tab === 'new-scan') tabParam = 'new-scan';
     
-    router.push(`/dashboard/${id}?tab=${tabParam}`);
+    const currentScan = searchParams.get('scan');
+    const scanQuery = currentScan ? `&scan=${currentScan}` : '';
+    router.push(`/dashboard?tab=${tabParam}${scanQuery}`);
   };
 
   useEffect(() => {
@@ -50,55 +58,70 @@ export default function DashboardPage({ params }: DashboardPageProps) {
         setLoading(true);
         setError(null);
         
-        if (user) {
-          // 1. Fetch scan base details from database
-          const scan = await getHistoryDetail(id);
-          if (!scan || !scan.resumeDetails) {
-            setError("Scan record not found.");
+        // 1. Read from client-side cache
+        const saved = localStorage.getItem('ats_analysis_result');
+        let parsed = null;
+        if (saved) {
+          try {
+            parsed = JSON.parse(saved);
+          } catch (e) {
+            console.error("Failed to parse local scan cache", e);
+          }
+        }
+        
+        // 2. If URL has scan ID, verify if it matches cache. If not, fetch from backend.
+        if (scanId) {
+          if (parsed && parsed.resumeDetails?.id === scanId) {
+            setResult(parsed);
             setLoading(false);
             return;
           }
 
-          // 2. Perform on-the-fly comparative calculations if jdText exists
-          if (scan.jdText) {
+          // Fetch from backend
+          const { getHistoryDetail, runComprehensiveAnalysis } = await import('@/lib/api');
+          try {
+            const detail = await getHistoryDetail(scanId);
             const analysis = await runComprehensiveAnalysis(
-              {
-                id: scan.resumeDetails.id,
-                name: scan.resumeDetails.name,
-                email: scan.resumeDetails.email,
-                phone: scan.resumeDetails.phone,
-                parsed_text: scan.resumeDetails.parsed_text
-              },
-              scan.jdText
+              detail.resumeDetails,
+              detail.jdText || detail.jd_text || ''
             );
+
+            let recs = detail.recommendations || undefined;
+            if (recs && !recs.status) {
+              recs.status = 'success';
+            }
 
             const finalResult: ComprehensiveAnalysisResult = {
               ...analysis,
-              jdText: scan.jdText,
-              recommendations: scan.recommendations || undefined
+              jdText: detail.jdText || detail.jd_text,
+              recommendations: recs
             };
 
             setResult(finalResult);
-          } else {
-            setError("Job description text is missing for this scan.");
+            localStorage.setItem('ats_analysis_result', JSON.stringify(finalResult));
+            setLoading(false);
+            return;
+          } catch (fetchErr: any) {
+            console.error("Failed to fetch historical scan:", fetchErr);
+            setError(fetchErr.message || "Failed to load the requested scan.");
+            setLoading(false);
+            return;
           }
+        }
+
+        // 3. If no scan ID in URL, but we have a valid cache, use it
+        if (parsed && parsed.resumeDetails) {
+          setResult(parsed);
+          window.history.replaceState(null, '', `/dashboard?tab=${activeTab}&scan=${parsed.resumeDetails.id}`);
+          setLoading(false);
+          return;
+        }
+        
+        // 4. No scan active. If tab is not 'new-scan' or 'history', redirect to 'new-scan' (if logged in)
+        if (activeTab !== 'new-scan' && activeTab !== 'history') {
+          router.push(user ? '/dashboard?tab=new-scan' : '/');
         } else {
-          // Anonymous user: load from localStorage
-          const saved = localStorage.getItem('ats_analysis_result');
-          if (saved) {
-            try {
-              const parsed = JSON.parse(saved);
-              if (parsed.resumeDetails && parsed.resumeDetails.id === id) {
-                setResult(parsed);
-                setLoading(false);
-                return;
-              }
-            } catch (e) {
-              console.error("Failed to parse local scan cache", e);
-            }
-          }
-          // Redirect if no local cache matches the dynamic ID
-          router.push('/');
+          setResult(null);
         }
       } catch (err: any) {
         console.error(err);
@@ -109,10 +132,10 @@ export default function DashboardPage({ params }: DashboardPageProps) {
     }
 
     loadScanData();
-  }, [id, user, authLoading, router]);
+  }, [authLoading, router, scanId]);
 
   const handleReset = () => {
-    router.push('/');
+    router.push('/dashboard?tab=new-scan');
   };
 
   const handleRecalculate = async (newResumeText: string) => {
@@ -124,7 +147,8 @@ export default function DashboardPage({ params }: DashboardPageProps) {
     // Recommendations regeneration is handled internally in suggestions tab,
     // but if needed we can re-fetch results here.
     if (!result) return;
-    const scan = await getHistoryDetail(id);
+    const { getHistoryDetail } = await import('@/lib/api');
+    const scan = await getHistoryDetail(result.resumeDetails.id);
     setResult({
       ...result,
       recommendations: scan.recommendations || undefined
@@ -168,7 +192,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
 
   return (
     <div className="flex-1 flex flex-col w-full min-h-screen relative z-10 bg-[#0d111d]">
-      {result && (
+      {result ? (
         <Dashboard
           result={result}
           onReset={handleReset}
@@ -177,9 +201,42 @@ export default function DashboardPage({ params }: DashboardPageProps) {
           setActiveTab={handleSetActiveTab}
           prevScore={prevScore}
           onRegenerateSuggestions={handleRegenerateRecommendations}
-          onLoadScan={(r) => router.push(`/dashboard/${r.resumeDetails.id}`)}
+          onLoadScan={(r) => {
+            setResult(r);
+            router.push(`/dashboard?tab=overview&restored=true`);
+          }}
         />
+      ) : (
+        activeTab === 'new-scan' && (
+          <Dashboard
+            result={null as any}
+            onReset={handleReset}
+            onRecalculate={handleRecalculate}
+            activeTab={activeTab}
+            setActiveTab={handleSetActiveTab}
+            prevScore={prevScore}
+            onRegenerateSuggestions={handleRegenerateRecommendations}
+            onLoadScan={(r) => {
+              setResult(r);
+              router.push(`/dashboard?tab=overview&restored=true`);
+            }}
+          />
+        )
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="flex-1 flex flex-col items-center justify-center min-h-screen text-gray-400 bg-[#0d111d]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    }>
+      <DashboardPageContent />
+    </React.Suspense>
   );
 }

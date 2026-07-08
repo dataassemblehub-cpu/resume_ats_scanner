@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.semantic import SemanticAnalysisRequest, SemanticAnalysisResponse
 from app.services.semantic_service import SemanticAnalyzerService
@@ -21,6 +23,8 @@ async def analyze_semantic(
     service: SemanticAnalyzerService = Depends(get_semantic_service)
 ):
     try:
+        if request.scan_id:
+            logger.info(f"Processing scan {request.scan_id} in /analyze/semantic")
         return await service.analyze_semantic_similarity(
             resume_text=request.resume_text,
             jd_text=request.jd_text
@@ -29,3 +33,4 @@ async def analyze_semantic(
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

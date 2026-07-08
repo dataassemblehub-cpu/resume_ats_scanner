@@ -21,7 +21,13 @@ class ScoreService:
         if not r_text:
             raise ValueError("Resume text cannot be empty.")
         if not j_text:
-            raise ValueError("Job description text cannot be empty.")
+            return {
+                "skills": 0,
+                "experience": 0,
+                "projects": 0,
+                "education": 0,
+                "overall": 0
+            }
         if r_text == j_text:
             raise ValueError("Resume and Job Description cannot be identical.")
 

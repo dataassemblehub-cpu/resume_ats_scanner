@@ -32,3 +32,14 @@ dist/
 
 #personal file
 test.txt
+
+# Scratch scripts and test directories
+test_*.py
+check_*.py
+tests/
+test/
+__pycache__/
+*.spec.ts
+*.test.ts
+*.spec.tsx
+*.test.tsx

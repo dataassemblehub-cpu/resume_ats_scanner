@@ -117,12 +117,19 @@ function getAuthHeaders(): Record<string, string> {
 /**
  * Uploads a resume file to the backend.
  */
-export async function uploadResume(file: File): Promise<ResumeUploadResult> {
+export async function uploadResume(file: File, jdText?: string): Promise<ResumeUploadResult> {
   const formData = new FormData();
   formData.append('file', file);
+  if (jdText) {
+    formData.append('jdText', jdText);
+    formData.append('jd_text', jdText);
+  }
 
   const response = await fetch(`${API_BASE}/resume/upload`, {
     method: 'POST',
+    headers: {
+      ...getAuthHeaders()
+    },
     body: formData,
   });
 
@@ -198,13 +205,34 @@ export async function runComprehensiveAnalysis(
 ): Promise<ComprehensiveAnalysisResult> {
   const resumeText = resumeDetails.parsed_text;
 
-  // Run comparative analyses in parallel
-  const [score, keywords, semantic, formatting, sections] = await Promise.all([
-    postJSON<ScoreResult>('/analyze/score', { resume_text: resumeText, jd_text: jdText }),
-    postJSON<KeywordResult>('/analyze/keywords', { resume_text: resumeText, jd_text: jdText }),
-    postJSON<SemanticResult>('/analyze/semantic', { resume_text: resumeText, jd_text: jdText }),
-    postJSON<FormattingResult>('/analyze/formatting', { resume_text: resumeText }),
-    postJSON<SectionResult>('/resume/sections', { text: resumeText }),
+  let score: ScoreResult;
+  let keywords: KeywordResult;
+  let semantic: SemanticResult;
+
+  if (jdText && jdText.trim().length > 0) {
+    [score, keywords, semantic] = await Promise.all([
+      postJSON<ScoreResult>('/analyze/score', { resume_text: resumeText, jd_text: jdText, scan_id: resumeDetails.id }),
+      postJSON<KeywordResult>('/analyze/keywords', { resume_text: resumeText, jd_text: jdText, scan_id: resumeDetails.id }),
+      postJSON<SemanticResult>('/analyze/semantic', { resume_text: resumeText, jd_text: jdText, scan_id: resumeDetails.id }),
+    ]);
+  } else {
+    // Provide empty/fallback objects if no JD is provided
+    score = { overall: 0, skills: 0, experience: 0, projects: 0, education: 0 };
+    keywords = {
+      matched: [],
+      missing: [],
+      coverage_percentage: 0,
+      keyword_frequency: {}
+    };
+    semantic = {
+      similarity: 0,
+      semantic_score: 0
+    };
+  }
+
+  const [formatting, sections] = await Promise.all([
+    postJSON<FormattingResult>('/analyze/formatting', { resume_text: resumeText, scan_id: resumeDetails.id }),
+    postJSON<SectionResult>('/resume/sections', { text: resumeText, scan_id: resumeDetails.id }),
   ]);
 
   return {
@@ -287,4 +315,8 @@ export async function getHistoryDetail(resumeId: string): Promise<any> {
 
 export async function deleteHistoryItem(resumeId: string): Promise<{ status: string, message: string }> {
   return deleteJSON(`/scans/${resumeId}`);
+}
+
+export async function claimScan(resumeId: string): Promise<{ success: boolean }> {
+  return postJSON(`/resume/${resumeId}/claim`, {});
 }

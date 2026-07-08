@@ -56,6 +56,18 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
     return hmac.compare_digest(hash_password(password), hashed)
 
+async def get_current_user_optional(authorization: str | None = Header(None)) -> dict | None:
+    """
+    Dependency injection helper that extracts and validates the Bearer token.
+    Returns the user profile if authenticated, otherwise returns None.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    try:
+        return await get_current_user(authorization)
+    except Exception:
+        return None
+
 async def get_current_user(authorization: str | None = Header(None)) -> dict:
     """
     Dependency injection helper that extracts and validates the Bearer token.

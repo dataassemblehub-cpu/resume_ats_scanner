@@ -98,7 +98,7 @@ class SupabaseService:
             insert_response = self.client.table("users").insert({
                 "email": target_email,
                 "subscription_plan": "free",
-                "environment": settings.ENV,
+                "environment": "local (dev)" if settings.ENV == "development" else settings.ENV,
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }).execute()
@@ -188,7 +188,7 @@ class SupabaseService:
                 "password_hash": password_hash,
                 "subscription_plan": "free",
                 "ai_generation_count": 0,
-                "environment": settings.ENV,
+                "environment": "local (dev)" if settings.ENV == "development" else settings.ENV,
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }
@@ -240,7 +240,7 @@ class SupabaseService:
                         "subscription_plan": old_user.get("subscription_plan", "free"),
                         "ai_generation_count": old_user.get("ai_generation_count", 0),
                         "last_ai_generation_at": old_user.get("last_ai_generation_at"),
-                        "environment": settings.ENV,
+                        "environment": "local (dev)" if settings.ENV == "development" else settings.ENV,
                         "created_at": old_user.get("created_at", datetime.now(timezone.utc).isoformat()),
                         "updated_at": datetime.now(timezone.utc).isoformat()
                     }).execute()
@@ -326,7 +326,7 @@ class SupabaseService:
             "jd_text": jd_text,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat(),
-            "environment": settings.ENV
+            "environment": "local (dev)" if settings.ENV == "development" else settings.ENV
         }
 
         if not self.is_configured:
@@ -356,7 +356,7 @@ class SupabaseService:
                 "phone": phone,
                 "name": name,
                 "jd_text": jd_text,
-                "environment": settings.ENV,
+                "environment": "local (dev)" if settings.ENV == "development" else settings.ENV,
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }).execute()

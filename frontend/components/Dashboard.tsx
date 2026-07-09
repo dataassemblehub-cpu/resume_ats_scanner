@@ -169,8 +169,9 @@ export default function Dashboard({
     <div className="flex-1 flex flex-col lg:flex-row w-full min-h-screen relative z-10">
       
       {/* 1. LEFT SIDEBAR (Desktop only) */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-white/5 bg-black/20 backdrop-blur-md p-6 shrink-0 justify-between sticky top-0 h-screen">
-        <div className="flex flex-col gap-8">
+      <aside className="hidden lg:block w-64 border-r border-white/5 bg-black/20 backdrop-blur-md shrink-0 relative">
+        <div className="flex flex-col justify-between sticky top-0 h-screen p-6 overflow-y-auto">
+          <div className="flex flex-col gap-8">
           {/* Logo Branding */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-r from-sky-500 to-violet-500 flex items-center justify-center font-black text-white shadow-md shadow-sky-500/20 text-sm">
@@ -270,6 +271,7 @@ export default function Dashboard({
           </svg>
           Start New Scan
         </button>
+        </div>
       </aside>
 
       {/* 2. TOP NAVBAR HEADER (Mobile only) */}
@@ -583,24 +585,18 @@ export default function Dashboard({
 
       {/* 4. MOBILE BOTTOM NAVIGATION BAR (Mobile only) */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-black/60 backdrop-blur-lg border-t border-white/5 flex items-center justify-around py-1.5 pb-safe shadow-2xl">
-        {tabs.slice(0, 4).map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => handleTabClick(tab.key)}
             className={`mobile-nav-button ${activeTab === tab.key ? 'active' : ''}`}
           >
             {tab.icon}
-            <span className="text-[8px] mt-0.5">{tab.label.split(' ')[0]}</span>
+            <span className="text-[8px] mt-0.5">
+              {tab.key === 'history' ? 'History' : tab.key === 'exports' ? 'Export' : tab.label.split(' ')[0]}
+            </span>
           </button>
         ))}
-        {/* Exports mobile button */}
-        <button
-          onClick={() => setActiveTab('exports')}
-          className={`mobile-nav-button ${activeTab === 'exports' ? 'active' : ''}`}
-        >
-          {tabs.find(t => t.key === 'exports')?.icon}
-          <span className="text-[8px] mt-0.5">Export</span>
-        </button>
       </nav>
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>

@@ -81,9 +81,8 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
       };
 
       // 4. Update parent state
-      onLoadScan(finalResult);
+      onLoadScan(finalResult, true);
       localStorage.setItem('ats_analysis_result', JSON.stringify(finalResult));
-      onSetTab('overview');
       toast.success('Scan report successfully loaded!');
     } catch (err: any) {
       console.error(err);
@@ -190,7 +189,7 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
                 <tr className="border-b border-white/5 bg-white/[0.02] text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                   <th className="px-4 py-3">Resume Document</th>
                   <th className="px-4 py-3">Candidate Details</th>
-                  <th className="px-4 py-3">Uploaded Date</th>
+                  <th className="px-4 py-3">Last Modified</th>
                   <th className="px-4 py-3 text-center">AI Suggestions</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
@@ -226,7 +225,7 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
                         </div>
                       </td>
                       <td className="px-4 py-3.5 text-gray-400 font-mono text-[11px]">
-                        {formatDate(item.created_at)}
+                        {formatDate(item.updated_at || item.created_at)}
                       </td>
                       <td className="px-4 py-3.5 text-center">
                         {item.has_ai_recommendations ? (

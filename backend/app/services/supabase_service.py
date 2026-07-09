@@ -432,8 +432,8 @@ class SupabaseService:
                 r for r in self._mock_resumes.values() 
                 if r.get("user_id") == user_uuid and not r.get("is_deleted", False)
             ]
-            # Order by created_at desc (or mock order)
-            user_resumes.reverse()
+            # Order by updated_at desc
+            user_resumes.sort(key=lambda x: x.get("updated_at", x.get("created_at", "")), reverse=True)
             
             total = len(user_resumes)
             paginated = user_resumes[offset : offset + limit]
@@ -447,6 +447,7 @@ class SupabaseService:
                     "email": r.get("email"),
                     "phone": r.get("phone"),
                     "created_at": r["created_at"],
+                    "updated_at": r.get("updated_at", r["created_at"]),
                     "has_ai_recommendations": r.get("recommendations") is not None
                 })
             
@@ -466,8 +467,8 @@ class SupabaseService:
 
             # Query items
             response = self.client.table("resumes").select(
-                "id", "file_name", "name", "email", "phone", "created_at", "recommendations"
-            ).eq("user_id", user_uuid).eq("is_deleted", False).order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+                "id", "file_name", "name", "email", "phone", "created_at", "updated_at", "recommendations"
+            ).eq("user_id", user_uuid).eq("is_deleted", False).order("updated_at", desc=True).range(offset, offset + limit - 1).execute()
             
             items = []
             if response.data:
@@ -479,6 +480,7 @@ class SupabaseService:
                         "email": r.get("email"),
                         "phone": r.get("phone"),
                         "created_at": r["created_at"],
+                        "updated_at": r.get("updated_at", r["created_at"]),
                         "has_ai_recommendations": r.get("recommendations") is not None
                     })
 

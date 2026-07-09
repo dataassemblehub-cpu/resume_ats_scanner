@@ -47,7 +47,8 @@ function DashboardPageContent() {
     
     const currentScan = searchParams.get('scan');
     const scanQuery = currentScan ? `&scan=${currentScan}` : '';
-    router.push(`/dashboard?tab=${tabParam}${scanQuery}`);
+    const historicalQuery = searchParams.get('historical') === 'true' ? '&historical=true' : '';
+    router.push(`/dashboard?tab=${tabParam}${scanQuery}${historicalQuery}`);
   };
 
   useEffect(() => {
@@ -201,9 +202,13 @@ function DashboardPageContent() {
           setActiveTab={handleSetActiveTab}
           prevScore={prevScore}
           onRegenerateSuggestions={handleRegenerateRecommendations}
-          onLoadScan={(r) => {
+          onLoadScan={(r, isHistorical) => {
             setResult(r);
-            router.push(`/dashboard?tab=overview&restored=true`);
+            if (isHistorical) {
+              router.push(`/dashboard?tab=overview&scan=${r.resumeDetails?.id}&historical=true`);
+            } else {
+              router.push(`/dashboard?tab=overview&restored=true`);
+            }
           }}
         />
       ) : (
@@ -216,9 +221,13 @@ function DashboardPageContent() {
             setActiveTab={handleSetActiveTab}
             prevScore={prevScore}
             onRegenerateSuggestions={handleRegenerateRecommendations}
-            onLoadScan={(r) => {
+            onLoadScan={(r, isHistorical) => {
               setResult(r);
-              router.push(`/dashboard?tab=overview&restored=true`);
+              if (isHistorical) {
+                router.push(`/dashboard?tab=overview&scan=${r.resumeDetails?.id}&historical=true`);
+              } else {
+                router.push(`/dashboard?tab=overview&restored=true`);
+              }
             }}
           />
         )

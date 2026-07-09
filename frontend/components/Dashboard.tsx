@@ -31,7 +31,7 @@ interface DashboardProps {
     keywords: number;
   } | null;
   onRegenerateSuggestions: (newResumeText: string) => Promise<void>;
-  onLoadScan: (result: ComprehensiveAnalysisResult) => void;
+  onLoadScan: (result: ComprehensiveAnalysisResult, isHistorical?: boolean) => void;
 }
 
 export default function Dashboard({ 
@@ -46,7 +46,7 @@ export default function Dashboard({
 }: DashboardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isRestored = searchParams.get('scan') !== null;
+  const isRestored = searchParams.get('historical') === 'true';
   const { user, logout, upgradeAccount } = useAuth();
   const { canGenerateAI, canExportReport, isPremium, plan } = useEntitlements();
 
@@ -312,7 +312,7 @@ export default function Dashboard({
       </header>
 
       {/* 3. DYNAMIC CONTENT MAIN AREA */}
-      <main className="flex-1 overflow-y-auto custom-scrollbar relative z-10 scroll-smooth">
+      <main className="flex-1 relative z-10 scroll-smooth">
         
         {/* Historical View Banner */}
         {isRestored && activeTab !== 'new-scan' && (

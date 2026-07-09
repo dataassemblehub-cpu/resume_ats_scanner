@@ -1,7 +1,7 @@
 from supabase import create_client, Client
 from app.config import settings
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 class SupabaseService:
     # Shared class-level in-memory tables for offline mockup mode
@@ -99,8 +99,8 @@ class SupabaseService:
                 "email": target_email,
                 "subscription_plan": "free",
                 "environment": settings.ENV,
-                "created_at": datetime.now().isoformat(),
-                "updated_at": datetime.now().isoformat()
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
             }).execute()
             if insert_response.data and len(insert_response.data) > 0:
                 return insert_response.data[0]["id"]
@@ -176,7 +176,7 @@ class SupabaseService:
                 # Update existing placeholder database record
                 response = self.client.table("users").update({
                     "password_hash": password_hash,
-                    "updated_at": datetime.now().isoformat()
+                    "updated_at": datetime.now(timezone.utc).isoformat()
                 }).eq("id", existing_user["id"]).execute()
                 
                 if response.data:
@@ -189,8 +189,8 @@ class SupabaseService:
                 "subscription_plan": "free",
                 "ai_generation_count": 0,
                 "environment": settings.ENV,
-                "created_at": datetime.now().isoformat(),
-                "updated_at": datetime.now().isoformat()
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
             }
             response = self.client.table("users").insert(payload).execute()
             if response.data:
@@ -241,8 +241,8 @@ class SupabaseService:
                         "ai_generation_count": old_user.get("ai_generation_count", 0),
                         "last_ai_generation_at": old_user.get("last_ai_generation_at"),
                         "environment": settings.ENV,
-                        "created_at": old_user.get("created_at", datetime.now().isoformat()),
-                        "updated_at": datetime.now().isoformat()
+                        "created_at": old_user.get("created_at", datetime.now(timezone.utc).isoformat()),
+                        "updated_at": datetime.now(timezone.utc).isoformat()
                     }).execute()
                     
                     # 2. Update resumes user_id to new_uuid
@@ -286,7 +286,7 @@ class SupabaseService:
         if not self.is_configured:
             if user_uuid in self._mock_users:
                 self._mock_users[user_uuid]["ai_generation_count"] += 1
-                self._mock_users[user_uuid]["last_ai_generation_at"] = datetime.now().isoformat()
+                self._mock_users[user_uuid]["last_ai_generation_at"] = datetime.now(timezone.utc).isoformat()
                 return self._mock_users[user_uuid]
             return None
 
@@ -295,7 +295,7 @@ class SupabaseService:
             count = (user.get("ai_generation_count") or 0) + 1
             response = self.client.table("users").update({
                 "ai_generation_count": count,
-                "last_ai_generation_at": datetime.now().isoformat()
+                "last_ai_generation_at": datetime.now(timezone.utc).isoformat()
             }).eq("id", user_uuid).execute()
             return response.data[0] if response.data else None
         except Exception as e:
@@ -324,8 +324,8 @@ class SupabaseService:
             "phone": phone,
             "name": name,
             "jd_text": jd_text,
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
             "environment": settings.ENV
         }
 
@@ -357,8 +357,8 @@ class SupabaseService:
                 "name": name,
                 "jd_text": jd_text,
                 "environment": settings.ENV,
-                "created_at": datetime.now().isoformat(),
-                "updated_at": datetime.now().isoformat()
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
             }).execute()
             if response.data and len(response.data) > 0:
                 inserted_resume = response.data[0]
@@ -415,7 +415,7 @@ class SupabaseService:
             self.client.table("resumes").update({
                 "jd_text": jd_text,
                 "recommendations": recommendations,
-                "updated_at": datetime.now().isoformat()
+                "updated_at": datetime.now(timezone.utc).isoformat()
             }).eq("id", resume_id).execute()
         except Exception as e:
             print(f"Warning: Failed to persist recommendations to DB: {str(e)}")

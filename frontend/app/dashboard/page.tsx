@@ -207,7 +207,7 @@ function DashboardPageContent() {
             if (isHistorical) {
               router.push(`/dashboard?tab=overview&scan=${r.resumeDetails?.id}&historical=true`);
             } else {
-              router.push(`/dashboard?tab=overview&restored=true`);
+              router.push(`/dashboard?tab=overview&scan=${r.resumeDetails?.id}&restored=true`);
             }
           }}
         />
@@ -226,7 +226,7 @@ function DashboardPageContent() {
               if (isHistorical) {
                 router.push(`/dashboard?tab=overview&scan=${r.resumeDetails?.id}&historical=true`);
               } else {
-                router.push(`/dashboard?tab=overview&restored=true`);
+                router.push(`/dashboard?tab=overview&scan=${r.resumeDetails?.id}&restored=true`);
               }
             }}
           />

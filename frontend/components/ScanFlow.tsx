@@ -80,10 +80,11 @@ export default function ScanFlow({ onScanCompleteAction }: ScanFlowProps) {
         jdText: jdText,
       };
 
+      localStorage.setItem('ats_analysis_result', JSON.stringify(finalResult));
+
       if (onScanCompleteAction) {
         onScanCompleteAction(finalResult);
       } else {
-        localStorage.setItem('ats_analysis_result', JSON.stringify(finalResult));
         router.push('/dashboard?tab=overview&scan=' + finalResult.resumeDetails.id);
       }
     } catch (err: any) {

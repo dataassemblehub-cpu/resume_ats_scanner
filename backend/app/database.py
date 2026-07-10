@@ -61,3 +61,12 @@ def init_db():
         logger.info("Database schema verification complete: tables 'users' and 'resumes' are verified/created.")
     except Exception as e:
         logger.error(f"Database auto-migration failed: {str(e)}")
+
+def get_db():
+    if SessionLocal is None:
+        raise Exception("Database engine is not configured.")
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

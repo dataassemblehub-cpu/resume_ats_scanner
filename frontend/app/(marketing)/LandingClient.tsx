@@ -96,7 +96,7 @@ export default function LandingClient() {
           </div>
           <h3 className="text-xl font-bold text-primary">AI-Powered Optimization</h3>
           <p className="text-sm text-muted leading-relaxed">
-            Transform your experience with zero hallucinations. Our Gemini AI intelligently reframes your existing achievements to naturally incorporate missing keywords.
+            Transform your experience with zero hallucinations. Our proprietary AI intelligently reframes your existing achievements to naturally incorporate missing keywords.
           </p>
         </motion.div>
       </motion.div>

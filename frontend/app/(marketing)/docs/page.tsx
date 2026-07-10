@@ -99,10 +99,10 @@ export default function DocsPage() {
           <section className="glass-panel p-8 glow-card-amber">
             <h2 className="text-2xl font-bold mb-4 text-primary flex items-center gap-3">
               <span className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center text-sm font-black">4</span>
-              AI Rewrite Generation (Gemini)
+              AI Rewrite Generation (LLM)
             </h2>
             <p className="text-sm text-muted leading-relaxed mb-4">
-              When we suggest a rewrite for a bullet point, we feed the Gemini LLM a strict prompt containing:
+              When we suggest a rewrite for a bullet point, we feed the underlying Large Language Model a strict prompt containing:
               <br/>1. Your original bullet point context.
               <br/>2. The specific missing keyword.
               <br/>3. A strict constraint to <strong>never fabricate experience</strong> or metrics.

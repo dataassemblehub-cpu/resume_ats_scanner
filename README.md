@@ -36,6 +36,8 @@ An intelligent Applicant Tracking System (ATS) optimization tool that bridges th
 │
 ├── frontend/                 # Next.js Application
 │   ├── app/                  # App Router pages (Dashboard, Landing)
+│   │   ├── (marketing)/      # SEO Landing & Docs Pages
+│   │   └── (app)/            # Core Scanner Application
 │   ├── components/           # Reusable UI components (ScanFlow, FileUpload, ThemeToggle)
 │   ├── lib/                  # Shared utilities (api client, auth contexts)
 │   └── tailwind.config.ts    # Tailwind styling config

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/lib/auth';
 import ScanFlow from '@/components/ScanFlow';
@@ -17,7 +18,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col p-4 md:p-8 max-w-7xl mx-auto w-full gap-8 relative z-10">
         {/* Navbar / Header */}
         <header className="flex items-center justify-between border-b border-border pb-4">
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-sky-500 to-violet-500 flex items-center justify-center font-bold text-white shadow-lg shadow-sm">
               ATS
             </div>
@@ -29,7 +30,7 @@ export default function Home() {
                 ATS scoring & optimization engine
               </p>
             </div>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-3">
             <ThemeToggle />

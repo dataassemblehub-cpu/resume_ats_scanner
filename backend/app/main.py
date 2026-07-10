@@ -2,7 +2,7 @@ import time
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.routes import resume, jd, section, keyword, score, semantic, formatting, recommendation, auth, user, scans
+from app.routes import resume, jd, section, keyword, score, semantic, formatting, recommendation, auth, user, scans, contact
 from app.config import settings
 from app.database import init_db
 from app.utils.logging_config import logger
@@ -76,6 +76,7 @@ app.include_router(recommendation.router)
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(scans.router)
+app.include_router(contact.router, prefix="/api/contact", tags=["Contact"])
 
 # Health Check Route
 @app.get("/", tags=["General"])

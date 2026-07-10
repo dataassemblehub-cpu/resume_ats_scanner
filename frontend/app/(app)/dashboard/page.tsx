@@ -120,7 +120,7 @@ function DashboardPageContent() {
         
         // 4. No scan active. If tab is not 'new-scan' or 'history', redirect to 'new-scan' (if logged in)
         if (activeTab !== 'new-scan' && activeTab !== 'history') {
-          router.push(user ? '/dashboard?tab=new-scan' : '/');
+          router.push(user ? '/dashboard?tab=new-scan' : '/scanner');
         } else {
           setResult(null);
         }
@@ -141,7 +141,7 @@ function DashboardPageContent() {
 
   const handleRecalculate = async (newResumeText: string) => {
     // Navigate back to upload landing page to run recalculation from scratch
-    router.push('/');
+    router.push('/scanner');
   };
 
   const handleRegenerateRecommendations = async (newResumeText: string) => {
@@ -181,7 +181,7 @@ function DashboardPageContent() {
             <p className="text-xs text-gray-400 mt-2 leading-relaxed">{error}</p>
           </div>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/scanner')}
             className="px-4 py-2 bg-surface border-border hover:bg-card text-muted text-xs font-semibold rounded-lg transition-all cursor-pointer active:scale-95"
           >
             Go to Landing Page

@@ -33,10 +33,10 @@ export default function LandingClient() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-violet-500/10 blur-[80px] rounded-full pointer-events-none" />
         
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 relative z-10 text-transparent bg-clip-text bg-gradient-to-br from-primary via-primary to-muted">
-          Beat the ATS with AI.
+          Enhance Your Resume with AI.
         </h1>
         <p className="text-lg md:text-xl text-muted mb-10 max-w-2xl mx-auto leading-relaxed relative z-10">
-          Upload your resume and the job description. Our advanced AI scanner reveals your ATS score, extracts missing keywords, and automatically rewrites your bullet points to match exactly what recruiters are searching for.
+          Instantly optimize your resume for any job description. Our AI-driven ATS scanner pinpoints missing keywords, evaluates your true score, and intelligently rewrites your bullet points to ensure you stand out to recruiters and easily pass automated filters.
         </p>
         
         <motion.div 
@@ -70,9 +70,9 @@ export default function LandingClient() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-primary">Precise ATS Scoring</h3>
+          <h3 className="text-xl font-bold text-primary">Smart ATS Scoring</h3>
           <p className="text-sm text-muted leading-relaxed">
-            Our engine uses TF-IDF and semantic similarity to accurately calculate how well your resume matches the job description, just like top-tier Applicant Tracking Systems.
+            Leverage advanced TF-IDF and semantic matching algorithms to instantly see how your resume stacks up against industry-standard Applicant Tracking Systems.
           </p>
         </motion.div>
 
@@ -82,9 +82,9 @@ export default function LandingClient() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-primary">Keyword Gap Analysis</h3>
+          <h3 className="text-xl font-bold text-primary">Targeted Keyword Insights</h3>
           <p className="text-sm text-muted leading-relaxed">
-            Instantly discover the exact hard skills, soft skills, and tools you are missing. We highlight the exact phrasing recruiters set up in their ATS filters.
+            Identify the critical hard skills, soft skills, and tools missing from your profile. We pinpoint the exact terminology recruiters are filtering for.
           </p>
         </motion.div>
 
@@ -94,9 +94,9 @@ export default function LandingClient() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-primary">AI Bullet Rewrites</h3>
+          <h3 className="text-xl font-bold text-primary">AI-Powered Optimization</h3>
           <p className="text-sm text-muted leading-relaxed">
-            We don't hallucinate experience. Our Gemini-powered AI takes your existing bullet points and rewrites them to seamlessly integrate the missing keywords.
+            Transform your experience with zero hallucinations. Our Gemini AI intelligently reframes your existing achievements to naturally incorporate missing keywords.
           </p>
         </motion.div>
       </motion.div>

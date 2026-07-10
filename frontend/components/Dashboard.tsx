@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { ComprehensiveAnalysisResult, getAIRecommendations, AIRecommendationsResult } from '@/lib/api';
 import OverviewSection from './OverviewSection';
 import SectionChecks from './SectionChecks';
@@ -175,7 +176,7 @@ export default function Dashboard({
           <div className="flex flex-col gap-8">
           {/* Logo Branding */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-r from-sky-500 to-violet-500 flex items-center justify-center font-black text-white shadow-sm text-sm">
                 ATS
               </div>
@@ -187,7 +188,7 @@ export default function Dashboard({
                   ATS scoring & optimization engine
                 </p>
               </div>
-            </div>
+            </Link>
             <ThemeToggle />
           </div>
 
@@ -280,7 +281,7 @@ export default function Dashboard({
 
       {/* 2. TOP NAVBAR HEADER (Mobile only) */}
       <header className="lg:hidden flex items-center justify-between border-b border-border bg-page bg-opacity-90 backdrop-blur-md px-4 py-3 sticky top-0 z-30 w-full">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-sky-500 to-violet-500 flex items-center justify-center font-bold text-primary text-xs">
             ATS
           </div>
@@ -290,7 +291,7 @@ export default function Dashboard({
             </span>
             <span className="text-[8px] text-muted font-bold">Score: {result?.score?.overall || 0}%</span>
           </div>
-        </div>
+        </Link>
 
         <div className="flex items-center gap-2">
           <ThemeToggle />

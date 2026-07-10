@@ -205,7 +205,7 @@ export default function ExportPage() {
           Please log in to your account to view and export resume reports.
         </p>
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/scanner')}
           className="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white rounded-xl transition-all"
         >
           Return to Login
@@ -228,7 +228,7 @@ export default function ExportPage() {
           PDF report exporting is a premium feature. Please upgrade to a premium plan to unlock downloadable reports.
         </p>
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/scanner')}
           className="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white rounded-xl transition-all"
         >
           Back to Dashboard
@@ -249,7 +249,7 @@ export default function ExportPage() {
         <h2 className="text-xl font-bold text-gray-100 mb-2">Error Loading Scan Report</h2>
         <p className="text-sm text-gray-400 max-w-md mb-6">{error || 'An unexpected error occurred.'}</p>
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/scanner')}
           className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-gray-200 rounded-xl transition-all border border-white/5"
         >
           Return to Dashboard
@@ -364,7 +364,7 @@ export default function ExportPage() {
           </button>
 
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/scanner')}
             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-white/5 text-xs font-bold text-gray-300 rounded-lg transition-all"
           >
             Return

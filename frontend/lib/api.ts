@@ -320,3 +320,16 @@ export async function deleteHistoryItem(resumeId: string): Promise<{ status: str
 export async function claimScan(resumeId: string): Promise<{ success: boolean }> {
   return postJSON(`/resume/${resumeId}/claim`, {});
 }
+export async function submitContactForm(data: any) {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const response = await fetch(`${API_URL}/api/contact/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Failed to submit form');
+  }
+  return response.json();
+}

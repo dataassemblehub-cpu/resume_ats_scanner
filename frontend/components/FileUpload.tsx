@@ -105,7 +105,7 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
     <div className="flex flex-col gap-6">
       {/* Resume Upload Box (Made larger and taller) */}
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+        <label className="text-xs font-bold text-muted uppercase tracking-wider">
           Resume Upload (.pdf, .docx)
         </label>
         <div
@@ -115,7 +115,7 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
           className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl py-14 px-8 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
             resumeFile 
               ? 'border-sky-500/50 bg-sky-500/5' 
-              : 'border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] hover:border-sky-500/30'
+              : 'border-border bg-gradient-to-b from-white/[0.04] to-white/[0.01] hover:border-sky-500/30'
           }`}
         >
           <input
@@ -131,7 +131,7 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
           />
           
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 ${
-            resumeFile ? 'bg-sky-500/10 text-sky-400 scale-110' : 'bg-white/5 text-gray-400 group-hover:text-white'
+            resumeFile ? 'bg-sky-500/10 text-sky-400 scale-110' : 'bg-surface text-muted group-hover:text-primary'
           }`}>
             <svg
               className="w-7 h-7"
@@ -151,12 +151,12 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
           {resumeFile ? (
             <div className="text-center z-10">
               <p className="font-semibold text-sky-400 text-sm truncate max-w-xs">{resumeFile.name}</p>
-              <p className="text-[10px] text-gray-500 mt-1 font-mono">{(resumeFile.size / 1024).toFixed(1)} KB</p>
+              <p className="text-[10px] text-muted mt-1 font-mono">{(resumeFile.size / 1024).toFixed(1)} KB</p>
             </div>
           ) : (
             <div className="text-center z-10">
-              <p className="text-sm font-semibold text-gray-200">Drag & drop your resume, or <span className="text-sky-400 group-hover:text-sky-300 transition-colors">browse</span></p>
-              <p className="text-xs text-gray-500 mt-1.5">Supports PDF & DOCX formats up to 10MB</p>
+              <p className="text-sm font-semibold text-primary">Drag & drop your resume, or <span className="text-sky-400 group-hover:text-sky-300 transition-colors">browse</span></p>
+              <p className="text-xs text-muted mt-1.5">Supports PDF & DOCX formats up to 10MB</p>
             </div>
           )}
         </div>
@@ -165,15 +165,15 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
       {/* Job Description Input (Made larger and taller) */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+          <label className="text-xs font-bold text-muted uppercase tracking-wider">
             Job Description (JD)
           </label>
-          <div className="flex rounded-xl bg-white/5 p-1 border border-white/5">
+          <div className="flex rounded-xl bg-surface p-1 border border-border">
             <button
               type="button"
               onClick={() => setJdMode('text')}
               className={`text-xs px-3.5 py-1.5 rounded-lg transition-all font-semibold cursor-pointer ${
-                jdMode === 'text' ? 'bg-sky-500/20 text-sky-400 shadow-sm' : 'text-gray-400 hover:text-white'
+                jdMode === 'text' ? 'bg-sky-500/20 text-sky-400 shadow-sm' : 'text-muted hover:text-primary'
               }`}
             >
               Paste Text
@@ -182,7 +182,7 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
               type="button"
               onClick={() => setJdMode('file')}
               className={`text-xs px-3.5 py-1.5 rounded-lg transition-all font-semibold cursor-pointer ${
-                jdMode === 'file' ? 'bg-sky-500/20 text-sky-400 shadow-sm' : 'text-gray-400 hover:text-white'
+                jdMode === 'file' ? 'bg-sky-500/20 text-sky-400 shadow-sm' : 'text-muted hover:text-primary'
               }`}
             >
               Upload File
@@ -195,7 +195,7 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
             value={jdText}
             onChange={(e) => setJdText(e.target.value)}
             placeholder="Paste the target job description requirements here to calculate keywords and semantic relevance scores..."
-            className="w-full h-48 bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-sky-500/30 focus:ring-1 focus:ring-sky-500/20 resize-none font-sans transition-all"
+            className="w-full h-48 bg-surface border border-border rounded-2xl p-4 text-sm text-primary placeholder-gray-500 focus:outline-none focus:border-sky-500/30 focus:ring-1 focus:ring-sky-500/20 resize-none font-sans transition-all"
           />
         ) : (
           <div
@@ -203,7 +203,7 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
             className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl py-10 px-8 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
               jdFile 
                 ? 'border-violet-500/50 bg-violet-500/5' 
-                : 'border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] hover:border-violet-500/30'
+                : 'border-border bg-gradient-to-b from-white/[0.04] to-white/[0.01] hover:border-violet-500/30'
             }`}
           >
             <input
@@ -219,7 +219,7 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
             />
             
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-all duration-300 ${
-              jdFile ? 'bg-violet-500/10 text-violet-400 scale-110' : 'bg-white/5 text-gray-400 group-hover:text-white'
+              jdFile ? 'bg-violet-500/10 text-violet-400 scale-110' : 'bg-surface text-muted group-hover:text-primary'
             }`}>
               <svg
                 className="w-6 h-6"
@@ -239,12 +239,12 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
             {jdFile ? (
               <div className="text-center z-10">
                 <p className="font-semibold text-violet-400 text-sm truncate max-w-xs">{jdFile.name}</p>
-                <p className="text-[10px] text-gray-500 mt-1 font-mono">{(jdFile.size / 1024).toFixed(1)} KB</p>
+                <p className="text-[10px] text-muted mt-1 font-mono">{(jdFile.size / 1024).toFixed(1)} KB</p>
               </div>
             ) : (
               <div className="text-center z-10">
-                <p className="text-sm font-semibold text-gray-200">Upload JD file (.txt, .pdf, .docx)</p>
-                <p className="text-xs text-gray-500 mt-1.5">Supports text/plain or office documents</p>
+                <p className="text-sm font-semibold text-primary">Upload JD file (.txt, .pdf, .docx)</p>
+                <p className="text-xs text-muted mt-1.5">Supports text/plain or office documents</p>
               </div>
             )}
           </div>
@@ -255,11 +255,11 @@ export default function FileUpload({ onScanStart, onScanComplete, onScanError }:
       <button
         onClick={handleScan}
         disabled={isProcessing || !resumeFile || (jdMode === 'text' ? !jdText.trim() : !jdFile)}
-        className="w-full mt-2 py-4 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-sky-500/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-95 duration-150"
+        className="w-full mt-2 py-4 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 disabled:from-gray-800 disabled:to-gray-800 disabled:text-muted text-primary text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-95 duration-150"
       >
         {isProcessing ? (
           <>
-            <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>

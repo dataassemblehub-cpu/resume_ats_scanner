@@ -9,6 +9,7 @@ import SuggestionsSection from './SuggestionsSection';
 import HistorySection from './HistorySection';
 import AuthModal from './AuthModal';
 import ScanFlow from './ScanFlow';
+import { ThemeToggle } from './ThemeToggle';
 import { useAuth, useEntitlements } from '@/lib/auth';
 import { toast } from 'react-hot-toast';
 
@@ -169,37 +170,40 @@ export default function Dashboard({
     <div className="flex-1 flex flex-col lg:flex-row w-full min-h-screen relative z-10">
       
       {/* 1. LEFT SIDEBAR (Desktop only) */}
-      <aside className="hidden lg:block w-64 border-r border-white/5 bg-black/20 backdrop-blur-md shrink-0 relative">
+      <aside className="hidden lg:block w-64 border-r border-border bg-sidebar backdrop-blur-md shrink-0 relative">
         <div className="flex flex-col justify-between sticky top-0 h-screen p-6 overflow-y-auto">
           <div className="flex flex-col gap-8">
           {/* Logo Branding */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-r from-sky-500 to-violet-500 flex items-center justify-center font-black text-white shadow-md shadow-sky-500/20 text-sm">
-              ATS
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-r from-sky-500 to-violet-500 flex items-center justify-center font-black text-white shadow-sm text-sm">
+                ATS
+              </div>
+              <div>
+                <h1 className="text-xs font-extrabold text-primary tracking-tight uppercase">
+                  AI Resume Scanner
+                </h1>
+                <p className="text-[8px] text-muted font-bold uppercase tracking-wide mt-0.5">
+                  ATS scoring & optimization engine
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xs font-extrabold text-white tracking-tight uppercase">
-                AI Resume Scanner
-              </h1>
-              <p className="text-[8px] text-gray-500 font-bold uppercase tracking-wide mt-0.5">
-                ATS scoring & optimization engine
-              </p>
-            </div>
+            <ThemeToggle />
           </div>
 
           {/* Candidate Profile Widget */}
-          <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex flex-col gap-3">
+          <div className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-3">
             <div>
-              <h3 className="text-xs font-bold text-gray-100 truncate">
+              <h3 className="text-xs font-bold text-primary truncate">
                 {result?.resumeDetails?.name || 'Anonymous Candidate'}
               </h3>
-              <p className="text-[10px] text-gray-400 truncate mt-0.5">
+              <p className="text-[10px] text-secondary truncate mt-0.5">
                 {result?.resumeDetails?.email || 'No email parsed'}
               </p>
             </div>
 
-            <div className="border-t border-white/5 pt-2 flex items-center justify-between">
-              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Overall Score</span>
+            <div className="border-t border-border pt-2 flex items-center justify-between">
+              <span className="text-[10px] text-muted font-bold uppercase tracking-wider">Overall Score</span>
               <span className="text-xs font-extrabold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded font-mono">
                 {result?.score?.overall || 0}%
               </span>
@@ -207,38 +211,38 @@ export default function Dashboard({
           </div>
 
           {/* User Account Portal Widget */}
-          <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex flex-col gap-3">
+          <div className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-3">
             {user ? (
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Account</span>
+                  <span className="text-[10px] text-muted font-bold uppercase tracking-wider">Account</span>
                   <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded ${
-                    isPremium ? 'text-teal-400 bg-teal-500/10 border border-teal-500/20' : 'text-gray-400 bg-white/5 border border-white/5'
+                    isPremium ? 'text-teal-400 bg-teal-500/10 border border-teal-500/20' : 'text-muted bg-surface border border-border'
                   }`}>
                     {plan}
                   </span>
                 </div>
-                <div className="text-[10px] text-gray-300 truncate font-mono" title={user.email}>{user.email}</div>
+                <div className="text-[10px] text-secondary truncate font-mono" title={user.email}>{user.email}</div>
                 
                 {!isPremium && (
-                  <div className="mt-1 w-full py-1.5 bg-[#21262D] border border-[#30363D] text-[#8B949E] font-bold text-[10px] uppercase rounded-lg text-center select-none shadow-sm">
+                  <div className="mt-1 w-full py-1.5 bg-surface border border-border text-muted font-bold text-[10px] uppercase rounded-lg text-center select-none shadow-sm">
                     ⚡ Coming Soon
                   </div>
                 )}
                 
                 <button
                   onClick={logout}
-                  className="mt-1 w-full py-1 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-[9px] font-bold uppercase rounded border border-white/5 transition-all cursor-pointer active:scale-95"
+                  className="mt-1 w-full py-1 bg-surface hover:bg-card border-border text-muted hover:text-primary text-[9px] font-bold uppercase rounded border border-border transition-all cursor-pointer active:scale-95"
                 >
                   Sign Out
                 </button>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Account</span>
+                <span className="text-[10px] text-muted font-bold uppercase tracking-wider">Account</span>
                 <button
                   onClick={() => setAuthModalOpen(true)}
-                  className="w-full py-2 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-white font-bold text-[10px] uppercase rounded-lg transition-all cursor-pointer active:scale-95 shadow-md shadow-sky-500/10"
+                  className="w-full py-2 btn-primary text-white font-bold text-[10px] uppercase rounded-lg transition-all cursor-pointer active:scale-95 shadow-sm"
                 >
                   Sign In / Register
                 </button>
@@ -264,7 +268,7 @@ export default function Dashboard({
         {/* Scan Another Button (Sidebar Bottom) */}
         <button
           onClick={() => setActiveTab('new-scan')}
-          className="sidebar-button bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-white font-bold text-[11px] py-2.5 flex items-center justify-center gap-1.5 rounded-xl transition-all shadow-md shadow-sky-500/10 active:scale-95"
+          className="sidebar-button btn-secondary text-primary font-bold text-[11px] py-2.5 flex items-center justify-center gap-1.5 rounded-xl transition-all shadow-sm active:scale-95 border-border"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -275,38 +279,39 @@ export default function Dashboard({
       </aside>
 
       {/* 2. TOP NAVBAR HEADER (Mobile only) */}
-      <header className="lg:hidden flex items-center justify-between border-b border-white/5 bg-black/40 backdrop-blur-md px-4 py-3 sticky top-0 z-30 w-full">
+      <header className="lg:hidden flex items-center justify-between border-b border-border bg-page bg-opacity-90 backdrop-blur-md px-4 py-3 sticky top-0 z-30 w-full">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-sky-500 to-violet-500 flex items-center justify-center font-bold text-white text-xs">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-sky-500 to-violet-500 flex items-center justify-center font-bold text-primary text-xs">
             ATS
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-white truncate max-w-[100px]">
+            <span className="text-xs font-bold text-primary truncate max-w-[100px]">
               {result?.resumeDetails?.name || 'ATS Report'}
             </span>
-            <span className="text-[8px] text-gray-400 font-bold">Score: {result?.score?.overall || 0}%</span>
+            <span className="text-[8px] text-muted font-bold">Score: {result?.score?.overall || 0}%</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           {user ? (
             <button
               onClick={logout}
-              className="text-[9px] font-bold uppercase tracking-wider text-gray-400 hover:text-white bg-white/5 border border-white/5 px-2 py-1.5 rounded-lg"
+              className="text-[9px] font-bold uppercase tracking-wider text-muted hover:text-primary bg-surface border border-border px-2 py-1.5 rounded-lg"
             >
               Sign Out
             </button>
           ) : (
             <button
               onClick={() => setAuthModalOpen(true)}
-              className="text-[9px] font-bold uppercase tracking-wider text-white bg-gradient-to-r from-sky-500 to-violet-500 px-2.5 py-1.5 rounded-lg shadow"
+              className="text-[9px] font-bold uppercase tracking-wider text-primary bg-gradient-to-r from-sky-500 to-violet-500 px-2.5 py-1.5 rounded-lg shadow"
             >
               Sign In
             </button>
           )}
           <button
             onClick={onReset}
-            className="text-[9px] font-bold uppercase tracking-wider text-gray-400 hover:text-white bg-white/5 border border-white/5 px-2.5 py-1.5 rounded-lg transition-all"
+            className="text-[9px] font-bold uppercase tracking-wider text-muted hover:text-primary bg-surface border border-border px-2.5 py-1.5 rounded-lg transition-all"
           >
             Reset
           </button>
@@ -321,13 +326,13 @@ export default function Dashboard({
           <div className="bg-gradient-to-r from-violet-500/20 to-sky-500/20 border-b border-violet-500/30 px-6 py-3 flex items-center justify-between backdrop-blur-md sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <span className="text-lg">🕰️</span>
-              <p className="text-xs font-medium text-gray-200">
+              <p className="text-xs font-medium text-primary">
                 You are viewing a historical scan report. Values are read-only.
               </p>
             </div>
             <button
               onClick={() => setActiveTab('new-scan')}
-              className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-1.5 rounded-lg transition-all"
+              className="text-xs font-bold btn-secondary px-4 py-1.5 rounded-lg transition-all active:scale-95"
             >
               Start New Scan
             </button>
@@ -374,20 +379,20 @@ export default function Dashboard({
             !user ? (
               <div className="glass-panel p-12 flex flex-col items-center justify-center text-center gap-6 relative overflow-hidden min-h-[400px]">
                 <div className="absolute w-[300px] h-[300px] bg-gradient-to-r from-violet-500/10 to-sky-500/10 rounded-full blur-[60px] -top-12 -right-12 pointer-events-none" />
-                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/5 text-gray-500">
+                <div className="w-12 h-12 rounded-full bg-surface flex items-center justify-center border border-border text-muted">
                   <svg className="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
                 <div className="flex flex-col gap-2 max-w-sm relative z-10">
-                  <h3 className="text-lg font-bold text-white tracking-tight">AI Suggestions Locked</h3>
-                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                  <h3 className="text-lg font-bold text-primary tracking-tight">AI Suggestions Locked</h3>
+                  <p className="text-xs text-muted mt-1 leading-relaxed">
                     AI suggestions, gap analysis, and tailored bullet point optimizations require authentication. Create a free account or sign in to continue.
                   </p>
                 </div>
                 <button
                   onClick={() => setAuthModalOpen(true)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-sky-500/10 active:scale-95 transition-all relative z-10"
+                  className="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-primary text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-sm active:scale-95 transition-all relative z-10"
                 >
                   Sign In / Create Account
                 </button>
@@ -410,30 +415,30 @@ export default function Dashboard({
                   <div className="flex flex-col items-center gap-4 relative z-10">
                     <div className="w-12 h-12 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
                     <div className="flex flex-col gap-1 max-w-sm">
-                      <h3 className="text-md font-bold text-white tracking-tight">Generating AI Suggestions</h3>
-                      <p className="text-xs text-gray-400 leading-relaxed">
+                      <h3 className="text-md font-bold text-primary tracking-tight">Generating AI Suggestions</h3>
+                      <p className="text-xs text-muted leading-relaxed">
                         Google Gemini is analyzing profile gaps and rewriting experience bullet points...
                       </p>
                     </div>
                   </div>
                 ) : !canGenerateAI ? (
                   <div className="flex flex-col items-center gap-6 relative z-10">
-                    <div className="w-16 h-16 rounded-2xl bg-[#21262D] border border-[#30363D] flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-surface border border-border flex items-center justify-center">
                       <span className="text-xl">⚡</span>
                     </div>
                     <div className="flex flex-col gap-2 max-w-md">
-                      <h3 className="text-lg font-bold text-white tracking-tight">AI Suggestions</h3>
-                      <p className="text-xs text-gray-400 leading-relaxed">
+                      <h3 className="text-lg font-bold text-primary tracking-tight">AI Suggestions</h3>
+                      <p className="text-xs text-muted leading-relaxed">
                         Additional recommendations and unlimited reports are coming soon! Keep scanning to optimize your resume.
                       </p>
                     </div>
-                    <div className="px-4 py-2 bg-[#21262D] border border-[#30363D] text-[#8B949E] text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm select-none">
+                    <div className="px-4 py-2 bg-surface border border-border text-muted text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm select-none">
                       ⚡ Coming Soon
                     </div>
                   </div>
                 ) : (
                   <>
-                    <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative group">
+                    <div className="w-16 h-16 rounded-2xl bg-surface border border-border flex items-center justify-center relative group">
                       <div className="absolute inset-0 bg-gradient-to-r from-violet-500/20 to-sky-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
                       <svg className="w-8 h-8 text-sky-400 group-hover:scale-110 transition-transform duration-300 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 21m0 0l-.813-5.096L9 21zm0 0h1m-1 0H8m6.813-5.096L15 21m0 0l-.813-5.096L15 21zm0 0h.5m-.5 0h-.5M8 6h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z" />
@@ -441,17 +446,17 @@ export default function Dashboard({
                     </div>
  
                     <div className="flex flex-col gap-2 max-w-md relative z-10">
-                      <h3 className="text-xl font-extrabold text-white tracking-tight">
+                      <h3 className="text-xl font-extrabold text-primary tracking-tight">
                         Generate AI Recommendations
                       </h3>
-                      <p className="text-sm text-gray-400 leading-relaxed">
+                      <p className="text-sm text-muted leading-relaxed">
                         Leverage Google Gemini to analyze gaps, prioritize missing technical skills, and generate tailor-made experience bullet optimizations tailored to your job description.
                       </p>
                     </div>
  
                     <button
                       onClick={handleGenerateAI}
-                      className="px-6 py-3 bg-gradient-to-r from-violet-600 to-sky-600 hover:from-violet-500 hover:to-sky-500 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-violet-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 relative z-10"
+                      className="px-6 py-3 bg-gradient-to-r from-violet-600 to-sky-600 hover:from-violet-500 hover:to-sky-500 text-primary text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 relative z-10"
                     >
                       ✨ Generate AI Recommendations
                     </button>
@@ -465,20 +470,20 @@ export default function Dashboard({
             !user ? (
               <div className="glass-panel p-12 flex flex-col items-center justify-center text-center gap-6 relative overflow-hidden min-h-[400px]">
                 <div className="absolute w-[300px] h-[300px] bg-gradient-to-r from-violet-500/10 to-sky-500/10 rounded-full blur-[60px] -top-12 -right-12 pointer-events-none" />
-                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/5 text-gray-500">
+                <div className="w-12 h-12 rounded-full bg-surface flex items-center justify-center border border-border text-muted">
                   <svg className="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
                 <div className="flex flex-col gap-2 max-w-sm relative z-10">
-                  <h3 className="text-lg font-bold text-white tracking-tight">Scan History Locked</h3>
-                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                  <h3 className="text-lg font-bold text-primary tracking-tight">Scan History Locked</h3>
+                  <p className="text-xs text-muted mt-1 leading-relaxed">
                     Browser persistence and server-side scan history tracking require account authentication. Create a free account or sign in to load past scans.
                   </p>
                 </div>
                 <button
                   onClick={() => setAuthModalOpen(true)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-sky-500/10 active:scale-95 transition-all relative z-10"
+                  className="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-primary text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-sm active:scale-95 transition-all relative z-10"
                 >
                   Sign In / Create Account
                 </button>
@@ -492,20 +497,20 @@ export default function Dashboard({
             !user ? (
               <div className="glass-panel p-12 flex flex-col items-center justify-center text-center gap-6 relative overflow-hidden min-h-[400px]">
                 <div className="absolute w-[300px] h-[300px] bg-gradient-to-r from-violet-500/10 to-sky-500/10 rounded-full blur-[60px] -top-12 -right-12 pointer-events-none" />
-                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/5 text-gray-500">
+                <div className="w-12 h-12 rounded-full bg-surface flex items-center justify-center border border-border text-muted">
                   <svg className="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
                 <div className="flex flex-col gap-2 max-w-sm relative z-10">
-                  <h3 className="text-lg font-bold text-white tracking-tight">Export Options Locked</h3>
-                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                  <h3 className="text-lg font-bold text-primary tracking-tight">Export Options Locked</h3>
+                  <p className="text-xs text-muted mt-1 leading-relaxed">
                     Downloading PDF reports and extracting plain text requires an authenticated account. Create a free account or sign in to export your results.
                   </p>
                 </div>
                 <button
                   onClick={() => setAuthModalOpen(true)}
-                  className="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-sky-500/10 active:scale-95 transition-all relative z-10"
+                  className="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-primary text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-sm active:scale-95 transition-all relative z-10"
                 >
                   Sign In / Create Account
                 </button>
@@ -513,8 +518,8 @@ export default function Dashboard({
             ) : (
               <div className="glass-panel p-8 min-h-[300px] flex flex-col gap-6">
               <div>
-                <h3 className="text-sm font-bold text-gray-200 uppercase tracking-wider">Export Analytics</h3>
-                <p className="text-xs text-gray-400 mt-1">
+                <h3 className="text-sm font-bold text-primary uppercase tracking-wider">Export Analytics</h3>
+                <p className="text-xs text-muted mt-1">
                   Download your scan results report in various formats for review or sharing.
                 </p>
               </div>
@@ -531,7 +536,7 @@ export default function Dashboard({
                     localStorage.setItem('ats_export_data', JSON.stringify(result));
                     window.open(`/export/${result.resumeDetails.id}`, '_blank');
                   }}
-                  className="flex flex-col items-center gap-3 p-6 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-200 relative group"
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border border-border bg-surface hover:bg-card border-border transition-all duration-200 relative group"
                 >
                   {!canExportReport && (
                     <div className="absolute top-2 right-2 text-amber-500" title="Premium Feature">
@@ -546,8 +551,8 @@ export default function Dashboard({
                     </svg>
                   </div>
                   <div className="text-center">
-                    <span className="text-xs font-bold text-gray-200">Download PDF Report</span>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Styled resume summary card</p>
+                    <span className="text-xs font-bold text-primary">Download PDF Report</span>
+                    <p className="text-[10px] text-muted mt-0.5">Styled resume summary card</p>
                   </div>
                 </button>
 
@@ -564,7 +569,7 @@ export default function Dashboard({
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                   }}
-                  className="flex flex-col items-center gap-3 p-6 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-200"
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border border-border bg-surface hover:bg-card border-border transition-all duration-200"
                 >
                   <div className="w-10 h-10 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -572,8 +577,8 @@ export default function Dashboard({
                     </svg>
                   </div>
                   <div className="text-center">
-                    <span className="text-xs font-bold text-gray-200">Export Extracted Text</span>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Plain text file of parser output</p>
+                    <span className="text-xs font-bold text-primary">Export Extracted Text</span>
+                    <p className="text-[10px] text-muted mt-0.5">Plain text file of parser output</p>
                   </div>
                 </button>
               </div>
@@ -584,7 +589,7 @@ export default function Dashboard({
       </main>
 
       {/* 4. MOBILE BOTTOM NAVIGATION BAR (Mobile only) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-black/60 backdrop-blur-lg border-t border-white/5 flex items-center justify-around py-1.5 pb-safe shadow-2xl">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-page bg-opacity-90 backdrop-blur-lg border-t border-border flex items-center justify-around py-1.5 pb-safe shadow-2xl">
         {tabs.map((tab) => (
           <button
             key={tab.key}

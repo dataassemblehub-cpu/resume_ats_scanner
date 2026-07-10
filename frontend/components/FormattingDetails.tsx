@@ -105,10 +105,10 @@ export default function FormattingDetails({ formatting }: FormattingDetailsProps
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="glass-panel p-4 flex items-center justify-between border-l-4 border-l-rose-500 hover:shadow-[0_0_20px_rgba(244,63,94,0.1)] transition-all">
           <div className="flex flex-col">
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Critical Issues</span>
-            <span className="text-2xl font-black text-rose-400 mt-1">{totalErrors}</span>
+            <span className="text-[10px] text-muted font-bold uppercase tracking-wider">Critical Issues</span>
+            <span className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">{totalErrors}</span>
           </div>
-          <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-400">
+          <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
@@ -117,10 +117,10 @@ export default function FormattingDetails({ formatting }: FormattingDetailsProps
 
         <div className="glass-panel p-4 flex items-center justify-between border-l-4 border-l-amber-500 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)] transition-all">
           <div className="flex flex-col">
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Style Warnings</span>
-            <span className="text-2xl font-black text-amber-400 mt-1">{totalWarnings}</span>
+            <span className="text-[10px] text-muted font-bold uppercase tracking-wider">Style Warnings</span>
+            <span className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{totalWarnings}</span>
           </div>
-          <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400">
+          <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
@@ -129,10 +129,10 @@ export default function FormattingDetails({ formatting }: FormattingDetailsProps
 
         <div className="glass-panel p-4 flex items-center justify-between border-l-4 border-l-sky-500 hover:shadow-[0_0_20px_rgba(14,165,233,0.1)] transition-all">
           <div className="flex flex-col">
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Formatting Tips</span>
-            <span className="text-2xl font-black text-sky-400 mt-1">{totalInfos}</span>
+            <span className="text-[10px] text-muted font-bold uppercase tracking-wider">Formatting Tips</span>
+            <span className="text-2xl font-black text-sky-600 dark:text-sky-400 mt-1">{totalInfos}</span>
           </div>
-          <div className="p-2.5 rounded-lg bg-sky-500/10 text-sky-400">
+          <div className="p-2.5 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
@@ -143,25 +143,25 @@ export default function FormattingDetails({ formatting }: FormattingDetailsProps
       {/* Lint Report Container */}
       <div className="glass-panel p-6 flex flex-col gap-6">
         {/* Diagnostic Tabs */}
-        <div className="flex flex-wrap items-center justify-between border-b border-white/5 pb-4 gap-4">
+        <div className="flex flex-wrap items-center justify-between border-b border-border pb-4 gap-4">
           <div className="flex flex-col">
-            <h3 className="text-sm font-bold text-gray-100 uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2">
               <span className="text-gradient">ATS Formatting Diagnostics</span>
             </h3>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-muted mt-0.5">
               Interactive structural and style check. Click on logs to view fix recommendations.
             </p>
           </div>
 
-          <div className="flex bg-black/30 p-1 rounded-xl border border-white/5">
+          <div className="flex bg-surface p-1 rounded-xl border border-border">
             {(['all', 'errors', 'warnings', 'recommendations'] as DiagnosticTab[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-lg transition-all duration-200 ${
                   activeTab === tab
-                    ? 'bg-sky-500/20 text-sky-400 border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.15)]'
-                    : 'text-gray-400 hover:text-gray-200 border border-transparent'
+                    ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.15)]'
+                    : 'text-muted hover:text-primary border border-transparent'
                 }`}
               >
                 {tab === 'all'
@@ -186,7 +186,7 @@ export default function FormattingDetails({ formatting }: FormattingDetailsProps
               <div
                 key={itemKey}
                 className={`flex flex-col rounded-xl border transition-all duration-300 ${
-                  isOpen ? 'bg-black/30 border-white/10' : 'bg-black/10 border-white/5 hover:border-white/10'
+                  isOpen ? 'bg-surface border-border' : 'bg-surface border-border hover:border-border'
                 }`}
               >
                 {/* Header Row */}
@@ -208,16 +208,16 @@ export default function FormattingDetails({ formatting }: FormattingDetailsProps
                       <div className="flex items-center gap-2">
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
                           issue.type === 'error'
-                            ? 'bg-rose-500/10 text-rose-400 border border-rose-500/10'
+                            ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/10'
                             : issue.type === 'warning'
-                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/10'
-                              : 'bg-sky-500/10 text-sky-400 border border-sky-500/10'
+                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/10'
+                              : 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/10'
                         }`}>
                           {issue.type === 'error' ? 'Error' : issue.type === 'warning' ? 'Warning' : 'Info'}
                         </span>
-                        <span className="text-[10px] text-gray-500 font-semibold">{issue.category}</span>
+                        <span className="text-[10px] text-muted font-semibold">{issue.category}</span>
                       </div>
-                      <span className="text-xs font-semibold text-gray-200 mt-1.5 leading-relaxed">{issue.text}</span>
+                      <span className="text-xs font-semibold text-primary mt-1.5 leading-relaxed">{issue.text}</span>
                     </div>
                   </div>
 
@@ -225,19 +225,19 @@ export default function FormattingDetails({ formatting }: FormattingDetailsProps
                     {issue.pointsNum > 0 ? (
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
                         issue.type === 'error'
-                          ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
                       }`}>
                         {issue.points}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
                         Suggestion
                       </span>
                     )}
 
                     <svg
-                      className={`w-4 h-4 text-gray-400 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                      className={`w-4 h-4 text-muted transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -250,15 +250,15 @@ export default function FormattingDetails({ formatting }: FormattingDetailsProps
 
                 {/* Collapsible Fix Guide */}
                 {isOpen && (
-                  <div className="px-4 pb-4 border-t border-white/5 pt-3 bg-black/25 rounded-b-xl">
+                  <div className="px-4 pb-4 border-t border-border pt-3 bg-black/25 rounded-b-xl">
                     <div className="flex flex-col gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 flex items-center gap-1">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                         </svg>
                         Remediation Action:
                       </span>
-                      <p className="text-xs text-gray-300 leading-relaxed font-sans">{issue.fix}</p>
+                      <p className="text-xs text-secondary leading-relaxed font-sans">{issue.fix}</p>
                     </div>
                   </div>
                 )}
@@ -266,7 +266,7 @@ export default function FormattingDetails({ formatting }: FormattingDetailsProps
             );
           })}
           {filteredIssues.length === 0 && (
-            <div className="py-12 text-center text-gray-500 italic">
+            <div className="py-12 text-center text-muted italic">
               No diagnostics match the tab selection. Your resume matches all checks in this category!
             </div>
           )}

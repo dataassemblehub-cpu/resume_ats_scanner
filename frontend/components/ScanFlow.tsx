@@ -80,10 +80,11 @@ export default function ScanFlow({ onScanCompleteAction }: ScanFlowProps) {
         jdText: jdText,
       };
 
+      localStorage.setItem('ats_analysis_result', JSON.stringify(finalResult));
+
       if (onScanCompleteAction) {
         onScanCompleteAction(finalResult);
       } else {
-        localStorage.setItem('ats_analysis_result', JSON.stringify(finalResult));
         router.push('/dashboard?tab=overview&scan=' + finalResult.resumeDetails.id);
       }
     } catch (err: any) {
@@ -112,10 +113,10 @@ export default function ScanFlow({ onScanCompleteAction }: ScanFlowProps) {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch">
           <div className="lg:col-span-3 glass-panel p-8 relative flex flex-col justify-between">
             <div>
-              <h2 className="text-lg font-bold text-white tracking-tight mb-2">
+              <h2 className="text-lg font-bold text-primary tracking-tight mb-2">
                 Resume & Job Description Analysis
               </h2>
-              <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+              <p className="text-xs text-muted mb-6 leading-relaxed">
                 Upload your resume file and paste or upload the target job description requirements. Our engine will calculate key matching scores instantly.
               </p>
             </div>
@@ -126,9 +127,9 @@ export default function ScanFlow({ onScanCompleteAction }: ScanFlowProps) {
             />
           </div>
           
-          <div className="lg:col-span-2 glass-panel p-8 bg-gradient-to-br from-[#121826]/75 to-[#0b0e17]/75 border border-white/5 shadow-xl flex flex-col justify-between">
+          <div className="lg:col-span-2 glass-panel p-8 shadow-xl flex flex-col justify-between">
             <div>
-              <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+              <h3 className="text-xs font-extrabold text-muted uppercase tracking-wider mb-6 flex items-center gap-2">
                 <svg className="w-5 h-5 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -139,35 +140,35 @@ export default function ScanFlow({ onScanCompleteAction }: ScanFlowProps) {
                 <div className="flex gap-4">
                   <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-xs font-bold text-sky-400 shrink-0">1</div>
                   <div>
-                    <h4 className="text-xs font-bold text-gray-200">Segment Sections</h4>
-                    <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">Resumes are parsed and segmented into standard sections (experience, skills, projects, and education).</p>
+                    <h4 className="text-xs font-bold text-primary">Segment Sections</h4>
+                    <p className="text-[11px] text-muted mt-1 leading-relaxed">Resumes are parsed and segmented into standard sections (experience, skills, projects, and education).</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-xs font-bold text-violet-400 shrink-0">2</div>
                   <div>
-                    <h4 className="text-xs font-bold text-gray-200">TF-IDF Keyword Extraction</h4>
-                    <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">Top technical and soft keywords are programmatically extracted from the Job Description requirements.</p>
+                    <h4 className="text-xs font-bold text-primary">TF-IDF Keyword Extraction</h4>
+                    <p className="text-[11px] text-muted mt-1 leading-relaxed">Top technical and soft keywords are programmatically extracted from the Job Description requirements.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 shrink-0">3</div>
                   <div>
-                    <h4 className="text-xs font-bold text-gray-200">Semantic Conceptual Fit</h4>
-                    <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">Sentence-level transformer embeddings map how well your experience aligns conceptually with the JD.</p>
+                    <h4 className="text-xs font-bold text-primary">Semantic Conceptual Fit</h4>
+                    <p className="text-[11px] text-muted mt-1 leading-relaxed">Sentence-level transformer embeddings map how well your experience aligns conceptually with the JD.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0">4</div>
                   <div>
-                    <h4 className="text-xs font-bold text-gray-200">Format Compliance Checks</h4>
-                    <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">Scans for parsing barriers like multi-column tables, complex margins, non-standard bullet characters, and font sizes.</p>
+                    <h4 className="text-xs font-bold text-primary">Format Compliance Checks</h4>
+                    <p className="text-[11px] text-muted mt-1 leading-relaxed">Scans for parsing barriers like multi-column tables, complex margins, non-standard bullet characters, and font sizes.</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 pt-4 border-t border-white/5 flex items-center justify-between text-[10px] text-gray-500">
+            <div className="mt-8 pt-4 border-t border-border flex items-center justify-between text-[10px] text-muted">
               <span>ATS Match Engine v1.0.0</span>
               <span className="flex items-center gap-1 font-mono">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -194,11 +195,11 @@ export default function ScanFlow({ onScanCompleteAction }: ScanFlowProps) {
             </div>
             <div className="flex flex-col gap-2 max-w-md">
               <h3 className="text-md font-bold text-rose-400">Analysis calculation error</h3>
-              <p className="text-xs text-gray-400 leading-relaxed">{errorMessage}</p>
+              <p className="text-xs text-muted leading-relaxed">{errorMessage}</p>
             </div>
             <button
               onClick={handleReset}
-              className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 text-xs font-semibold rounded-lg transition-all cursor-pointer active:scale-95"
+              className="px-4 py-2 bg-surface border border-border hover:bg-card border-border text-secondary text-xs font-semibold rounded-lg transition-all cursor-pointer active:scale-95"
             >
               Go Back & Retry
             </button>

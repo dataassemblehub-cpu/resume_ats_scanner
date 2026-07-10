@@ -23,10 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${outfit.variable} h-full antialiased`} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col bg-[#0d111d] dark:bg-[#0d111d] text-gray-200">
+      <body className="min-h-full flex flex-col">
         <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
+          attribute="data-theme"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >

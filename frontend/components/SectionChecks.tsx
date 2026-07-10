@@ -168,11 +168,11 @@ export default function SectionChecks({ sections, resumeDetails }: SectionChecks
 
   return (
     <div className="glass-panel p-6">
-      <div className="flex flex-col gap-1 mb-6 border-b border-white/5 pb-3">
-        <h3 className="text-sm font-bold text-gray-100 uppercase tracking-wider flex items-center gap-2">
+      <div className="flex flex-col gap-1 mb-6 border-b border-border pb-3">
+        <h3 className="text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2">
           <span className="text-gradient">Parsed Resume Sections</span>
         </h3>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-muted">
           ATS parsers look for standard headings to categorize resume content. Review what was successfully parsed.
         </p>
       </div>
@@ -197,12 +197,12 @@ export default function SectionChecks({ sections, resumeDetails }: SectionChecks
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2.5 rounded-lg bg-black/20 ${sec.colorText}`}>
+                  <div className={`p-2.5 rounded-lg bg-sidebar ${sec.colorText}`}>
                     {sec.icon}
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-100">{sec.label}</span>
-                    <span className="text-[10px] text-gray-400 mt-0.5">
+                    <span className="text-sm font-semibold text-primary">{sec.label}</span>
+                    <span className="text-[10px] text-muted mt-0.5">
                       {sec.detected
                         ? `Detected • ${wordCount} words (${charCount} chars)`
                         : sec.critical
@@ -227,7 +227,7 @@ export default function SectionChecks({ sections, resumeDetails }: SectionChecks
 
               {/* Show details / Preview */}
               {sec.detected && sectionText ? (
-                <div className="mt-3 border-t border-white/5 pt-3">
+                <div className="mt-3 border-t border-border pt-3">
                   <button
                     onClick={() => togglePreview(sec.key)}
                     className="flex items-center gap-1.5 text-xs font-semibold text-sky-400 hover:text-sky-300 transition-colors"
@@ -245,14 +245,14 @@ export default function SectionChecks({ sections, resumeDetails }: SectionChecks
                   </button>
 
                   {isOpen && (
-                    <div className="mt-2 text-xs text-gray-300 bg-black/40 border border-white/5 rounded-lg p-3 max-h-40 overflow-y-auto font-mono whitespace-pre-wrap leading-relaxed scrollbar-thin">
+                    <div className="mt-2 text-xs text-secondary bg-page bg-opacity-90 border border-border rounded-lg p-3 max-h-40 overflow-y-auto font-mono whitespace-pre-wrap leading-relaxed scrollbar-thin">
                       {sectionText}
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="mt-3 border-t border-white/5 pt-2">
-                  <p className="text-[11px] text-gray-400 italic">
+                <div className="mt-3 border-t border-border pt-2">
+                  <p className="text-[11px] text-muted italic">
                     {sec.tip}
                   </p>
                 </div>

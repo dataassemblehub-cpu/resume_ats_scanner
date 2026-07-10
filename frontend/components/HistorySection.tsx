@@ -11,7 +11,7 @@ import {
 import { toast } from 'react-hot-toast';
 
 interface HistorySectionProps {
-  onLoadScan: (result: ComprehensiveAnalysisResult) => void;
+  onLoadScan: (result: ComprehensiveAnalysisResult, isHistorical?: boolean) => void;
   onSetTab: (tab: 'overview') => void;
   currentScanId?: string;
 }
@@ -81,9 +81,8 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
       };
 
       // 4. Update parent state
-      onLoadScan(finalResult);
+      onLoadScan(finalResult, true);
       localStorage.setItem('ats_analysis_result', JSON.stringify(finalResult));
-      onSetTab('overview');
       toast.success('Scan report successfully loaded!');
     } catch (err: any) {
       console.error(err);
@@ -128,12 +127,12 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
       <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-violet-500/5 to-transparent blur-3xl pointer-events-none" />
 
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+      <div className="flex items-center justify-between border-b border-border pb-4">
         <div>
-          <h2 className="text-xs font-bold text-gray-200 uppercase tracking-wider">
+          <h2 className="text-xs font-bold text-primary uppercase tracking-wider">
             Recent Analyses
           </h2>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-muted mt-1">
             Access past ATS scores, compatibility reviews, and AI-optimized bullet recommendations.
           </p>
         </div>
@@ -143,8 +142,8 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
             toast.success('Scan history successfully refreshed!');
           }}
           disabled={loading}
-          className={`p-2 rounded-lg bg-white/5 border border-white/5 transition-all hover:scale-105 active:scale-95 ${
-            loading ? 'text-violet-400 opacity-55 cursor-not-allowed' : 'text-gray-400 hover:text-white'
+          className={`p-2 rounded-lg bg-surface border border-border transition-all hover:scale-105 active:scale-95 ${
+            loading ? 'text-violet-400 opacity-55 cursor-not-allowed' : 'text-muted hover:text-primary'
           }`}
           title="Refresh History"
         >
@@ -165,18 +164,18 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
       {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center py-16 gap-3">
           <div className="w-8 h-8 rounded-full border-2 border-violet-500/20 border-t-violet-500 animate-spin" />
-          <span className="text-xs text-gray-400">Loading scan history...</span>
+          <span className="text-xs text-muted">Loading scan history...</span>
         </div>
       ) : items.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center py-16 gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-gray-500">
+          <div className="w-12 h-12 rounded-xl bg-surface border border-border flex items-center justify-center text-muted">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
           <div>
-            <h3 className="text-sm font-bold text-gray-300">No Scan History Found</h3>
-            <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto leading-relaxed">
+            <h3 className="text-sm font-bold text-secondary">No Scan History Found</h3>
+            <p className="text-xs text-muted mt-1 max-w-xs mx-auto leading-relaxed">
               Your uploaded resumes and matches will appear here once you perform a scan while authenticated.
             </p>
           </div>
@@ -184,36 +183,36 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
       ) : (
         <div className="flex-1 flex flex-col justify-between gap-6">
           {/* Table List */}
-          <div className="overflow-x-auto border border-white/5 rounded-xl bg-black/10">
+          <div className="overflow-x-auto border border-border rounded-xl bg-card">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-white/5 bg-white/[0.02] text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <tr className="border-b border-border bg-surface text-[10px] font-bold text-muted uppercase tracking-wider">
                   <th className="px-4 py-3">Resume Document</th>
                   <th className="px-4 py-3">Candidate Details</th>
-                  <th className="px-4 py-3">Uploaded Date</th>
+                  <th className="px-4 py-3">Last Modified</th>
                   <th className="px-4 py-3 text-center">AI Suggestions</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-xs text-gray-300">
+              <tbody className="divide-y divide-border text-xs text-secondary">
                 {items.map((item) => {
                   const isItemLoading = loadingItemId === item.id;
                   const isCurrent = String(item.id) === String(currentScanId);
                   return (
                     <tr 
                       key={item.id} 
-                      className={`transition-all ${isCurrent ? 'bg-violet-500/10 border-l-2 border-violet-500' : 'hover:bg-white/[0.01]'}`}
+                      className={`transition-all ${isCurrent ? 'bg-accent/10 border-l-2 border-accent' : 'hover:bg-surface'}`}
                     >
-                      <td className="px-4 py-3.5 font-semibold text-gray-200">
+                      <td className="px-4 py-3.5 font-semibold text-primary">
                         <div className="flex items-center gap-2">
-                          <svg className={`w-4 h-4 shrink-0 ${isCurrent ? 'text-violet-300' : 'text-violet-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <svg className={`w-4 h-4 shrink-0 ${isCurrent ? 'text-accent' : 'text-muted'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                           <span className="truncate max-w-[180px]" title={item.file_name}>
                             {item.file_name}
                           </span>
                           {isCurrent && (
-                            <span className="ml-2 text-[9px] font-bold text-violet-300 bg-violet-500/20 px-2 py-0.5 rounded border border-violet-500/30 uppercase tracking-wider">
+                            <span className="ml-2 text-[9px] font-bold text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20 uppercase tracking-wider">
                               Current
                             </span>
                           )}
@@ -221,12 +220,12 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
                       </td>
                       <td className="px-4 py-3.5">
                         <div className="flex flex-col">
-                          <span className="font-medium text-gray-200">{item.name || 'Anonymous'}</span>
-                          <span className="text-[10px] text-gray-500 font-mono">{item.email || 'No email parsed'}</span>
+                          <span className="font-medium text-primary">{item.name || 'Anonymous'}</span>
+                          <span className="text-[10px] text-muted font-mono">{item.email || 'No email parsed'}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 text-gray-400 font-mono text-[11px]">
-                        {formatDate(item.created_at)}
+                      <td className="px-4 py-3.5 text-muted font-mono text-[11px]">
+                        {formatDate(item.updated_at || item.created_at)}
                       </td>
                       <td className="px-4 py-3.5 text-center">
                         {item.has_ai_recommendations ? (
@@ -234,7 +233,7 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
                             ✨ Cached
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-gray-500 bg-white/5 px-2 py-0.5 rounded border border-white/5 uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-muted bg-surface px-2 py-0.5 rounded border border-border uppercase tracking-wider">
                             Not Run
                           </span>
                         )}
@@ -246,10 +245,10 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
                             disabled={isItemLoading || isCurrent}
                             className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all flex items-center gap-1 ${
                               isItemLoading
-                                ? 'bg-violet-500/20 border-violet-500/30 text-violet-300'
+                                ? 'bg-accent/10 border-accent/20 text-accent'
                                 : isCurrent
-                                ? 'bg-gray-500/10 border-gray-500/20 text-gray-500 cursor-not-allowed opacity-50'
-                                : 'bg-violet-500/5 hover:bg-violet-500/15 border-violet-500/20 hover:border-violet-400/40 text-violet-300 hover:text-white cursor-pointer active:scale-95'
+                                ? 'bg-gray-500/10 border-gray-500/20 text-muted cursor-not-allowed opacity-50'
+                                : 'bg-surface hover:bg-card border-border hover:border-accent/40 text-secondary hover:text-primary cursor-pointer active:scale-95'
                             }`}
                           >
                             {isItemLoading ? (
@@ -271,7 +270,7 @@ export default function HistorySection({ onLoadScan, onSetTab, currentScanId }: 
                           <button
                             onClick={() => handleDeleteItem(item.id)}
                             disabled={isItemLoading}
-                            className="p-1.5 rounded-lg border border-white/5 bg-white/5 hover:bg-rose-500/10 hover:border-rose-500/20 text-gray-400 hover:text-rose-400 transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-50"
+                            className="p-1.5 rounded-lg border border-border bg-surface hover:bg-rose-500/10 hover:border-rose-500/20 text-muted hover:text-rose-400 transition-all cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-50"
                             title="Delete scan"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

@@ -36,7 +36,7 @@ const renderDelta = (current: number, prev: number | undefined | null) => {
         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
         : isNegative 
           ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
-          : 'bg-white/5 text-gray-500 border border-white/5'
+          : 'bg-surface text-muted border border-border'
     }`}>
       {isPositive ? `+${delta}` : delta === 0 ? '0' : `${delta}`}
     </span>
@@ -81,7 +81,7 @@ const ProgressGauge = ({ value, size = 70, strokeWidth = 6, colorClass = "text-s
       />
       <svg className="w-full h-full transform -rotate-90 relative z-10">
         <circle
-          className="text-white/5"
+          className="text-primary/5"
           strokeWidth={strokeWidth}
           stroke="currentColor"
           fill="transparent"
@@ -102,7 +102,7 @@ const ProgressGauge = ({ value, size = 70, strokeWidth = 6, colorClass = "text-s
           cy={size / 2}
         />
       </svg>
-      <span className="absolute text-sm font-extrabold text-white font-mono z-10">{value}%</span>
+      <span className="absolute text-sm font-extrabold text-primary font-mono z-10">{value}%</span>
     </div>
   );
 };
@@ -149,12 +149,12 @@ export default function OverviewSection({
         {/* ATS Score Card */}
         <div className="glass-panel p-5 flex items-center justify-between gap-4 border-l-4 border-l-violet-500 glow-card-violet group">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Overall ATS Score</span>
+            <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Overall ATS Score</span>
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-violet-400 font-semibold">{getATSGrade(score.overall)}</span>
               {prevScore && renderDelta(score.overall, prevScore.overall)}
             </div>
-            <p className="text-[10px] text-gray-500 mt-1 max-w-[145px] leading-relaxed">Weighted match score across key sections</p>
+            <p className="text-[10px] text-muted mt-1 max-w-[145px] leading-relaxed">Weighted match score across key sections</p>
           </div>
           <ProgressGauge value={score.overall} colorClass="text-violet-500" glowColor="rgba(139, 92, 246, 0.3)" />
         </div>
@@ -162,12 +162,12 @@ export default function OverviewSection({
         {/* Semantic Match Card */}
         <div className="glass-panel p-5 flex items-center justify-between gap-4 border-l-4 border-l-sky-500 glow-card-sky group">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Semantic Match</span>
+            <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Semantic Match</span>
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-sky-400 font-semibold">{getSemanticGrade(semantic.semantic_score)}</span>
               {prevScore && renderDelta(Math.round(semantic.semantic_score), prevScore.semantic)}
             </div>
-            <p className="text-[10px] text-gray-500 mt-1 max-w-[145px] leading-relaxed">NLP conceptual profile similarity</p>
+            <p className="text-[10px] text-muted mt-1 max-w-[145px] leading-relaxed">NLP conceptual profile similarity</p>
           </div>
           <ProgressGauge value={Math.round(semantic.semantic_score)} colorClass="text-sky-500" glowColor="rgba(14, 165, 233, 0.3)" />
         </div>
@@ -175,12 +175,12 @@ export default function OverviewSection({
         {/* Keyword Coverage Card */}
         <div className="glass-panel p-5 flex items-center justify-between gap-4 border-l-4 border-l-teal-500 glow-card-teal group">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keyword Coverage</span>
+            <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Keyword Coverage</span>
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-teal-400 font-semibold">{getKeywordGrade(keywords.coverage_percentage)}</span>
               {prevScore && renderDelta(Math.round(keywords.coverage_percentage), prevScore.keywords)}
             </div>
-            <p className="text-[10px] text-gray-500 mt-1 max-w-[145px] leading-relaxed">Target vocabulary density matched</p>
+            <p className="text-[10px] text-muted mt-1 max-w-[145px] leading-relaxed">Target vocabulary density matched</p>
           </div>
           <ProgressGauge value={Math.round(keywords.coverage_percentage)} colorClass="text-teal-500" glowColor="rgba(20, 184, 166, 0.3)" />
         </div>
@@ -188,12 +188,12 @@ export default function OverviewSection({
         {/* Formatting Score Card */}
         <div className="glass-panel p-5 flex items-center justify-between gap-4 border-l-4 border-l-amber-500 glow-card-amber group">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Formatting Rating</span>
+            <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Formatting Rating</span>
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-amber-400 font-semibold">{getFormattingGrade(formattingPercentage)}</span>
               {prevScore && renderDelta(formattingPercentage, prevScore.formatting)}
             </div>
-            <p className="text-[10px] text-gray-500 mt-1 max-w-[145px] leading-relaxed">Document layout & readability check</p>
+            <p className="text-[10px] text-muted mt-1 max-w-[145px] leading-relaxed">Document layout & readability check</p>
           </div>
           <ProgressGauge value={formattingPercentage} colorClass="text-amber-500" glowColor="rgba(245, 158, 11, 0.3)" />
         </div>
@@ -204,25 +204,25 @@ export default function OverviewSection({
         <div className="glass-panel p-6 bg-gradient-to-r from-violet-500/10 via-sky-500/5 to-transparent border border-violet-500/20 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="flex flex-col gap-1 relative z-10 max-w-lg">
-            <h4 className="text-sm font-extrabold text-white flex items-center gap-2">
+            <h4 className="text-sm font-extrabold text-primary flex items-center gap-2">
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
               </span>
               ✨ AI-Powered Recommendations Available
             </h4>
-            <p className="text-xs text-gray-400 leading-relaxed mt-1">
+            <p className="text-xs text-muted leading-relaxed mt-1">
               Google Gemini can analyze your profile gaps against this job description, prioritize missing technical skills, and write custom ATS-friendly experience bullet points.
             </p>
           </div>
           <button
             onClick={onGenerateAI}
             disabled={isGenerating}
-            className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-sky-600 hover:from-violet-500 hover:to-sky-500 disabled:from-violet-500/50 disabled:to-sky-500/50 text-white text-xs font-bold rounded-lg shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 whitespace-nowrap self-start sm:self-auto relative z-10"
+            className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-sky-600 hover:from-violet-500 hover:to-sky-500 disabled:from-violet-500/50 disabled:to-sky-500/50 text-primary text-xs font-bold rounded-lg shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 whitespace-nowrap self-start sm:self-auto relative z-10"
           >
             {isGenerating ? (
               <span className="flex items-center gap-1.5">
-                <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-3.5 w-3.5 text-primary" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
@@ -237,10 +237,10 @@ export default function OverviewSection({
 
       {/* Category Match Breakdown */}
       <div className="glass-panel p-6">
-        <div className="flex flex-col gap-1 mb-4 border-b border-white/5 pb-2">
-          <h3 className="text-sm font-bold text-gray-100 uppercase tracking-wider flex items-center justify-between">
+        <div className="flex flex-col gap-1 mb-4 border-b border-border pb-2">
+          <h3 className="text-sm font-bold text-primary uppercase tracking-wider flex items-center justify-between">
             <span className="text-gradient">Match Category Score Breakdown</span>
-            <span className="text-[10px] text-gray-400 normal-case font-normal">Actionable breakdown of ATS scoring criteria</span>
+            <span className="text-[10px] text-muted normal-case font-normal">Actionable breakdown of ATS scoring criteria</span>
           </h3>
         </div>
 
@@ -252,22 +252,22 @@ export default function OverviewSection({
             { name: 'Education Match', score: score.education, key: 'education', weight: '10%', color: 'from-green-500 to-teal-500' },
           ].map((cat) => (
             <div key={cat.name} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <span className="font-semibold text-gray-300 w-36 shrink-0">{cat.name}</span>
+              <span className="font-semibold text-secondary w-36 shrink-0">{cat.name}</span>
               
               <div className="flex-1 flex items-center gap-3">
-                <div className="h-2.5 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 relative">
+                <div className="h-2.5 w-full bg-page bg-opacity-90 rounded-full overflow-hidden border border-border relative">
                   <div
                     className={`h-full bg-gradient-to-r ${cat.color} rounded-full transition-all duration-1000 ease-out`}
                     style={{ width: `${cat.score}%` }}
                   />
                 </div>
                 <div className="flex items-center justify-end min-w-[75px] gap-0.5 shrink-0">
-                  <span className="font-mono font-bold text-white text-right">{cat.score}%</span>
+                  <span className="font-mono font-bold text-primary text-right">{cat.score}%</span>
                   {prevScore && renderDelta(cat.score, prevScore[cat.key as keyof typeof prevScore])}
                 </div>
               </div>
 
-              <span className="text-[9px] font-bold text-gray-400 bg-white/5 border border-white/5 px-2 py-0.5 rounded w-16 text-center select-none shrink-0 ml-2">
+              <span className="text-[9px] font-bold text-muted bg-surface border border-border px-2 py-0.5 rounded w-16 text-center select-none shrink-0 ml-2">
                 Weight: {cat.weight}
               </span>
             </div>
@@ -277,7 +277,7 @@ export default function OverviewSection({
 
       {/* Score Transparency Panel */}
       <div className="glass-panel p-6">
-        <h3 className="text-sm font-bold text-gray-100 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">
+        <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-4 border-b border-border pb-2">
           Score Calculation Transparency
         </h3>
 
@@ -287,13 +287,13 @@ export default function OverviewSection({
             return (
               <div key={item.name} className="flex flex-col gap-1.5">
                 <div className="flex justify-between text-xs font-medium">
-                  <span className="text-gray-400">{item.name}</span>
-                  <span className="text-gray-200">
-                    {item.score} / 100 &times; {item.weight} = <strong className="text-white">{actualContribution}</strong> pts
+                  <span className="text-muted">{item.name}</span>
+                  <span className="text-primary">
+                    {item.score} / 100 &times; {item.weight} = <strong className="text-primary">{actualContribution}</strong> pts
                   </span>
                 </div>
                 {/* Progress bar */}
-                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <div className="h-2 w-full bg-surface rounded-full overflow-hidden border border-border">
                   <div
                     className="h-full bg-gradient-to-r from-sky-500 to-violet-500 rounded-full transition-all duration-1000"
                     style={{ width: `${item.score}%` }}
@@ -304,9 +304,9 @@ export default function OverviewSection({
           })}
 
           {/* Dynamic math visualizer */}
-          <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/5 flex flex-col gap-2">
-            <h4 className="text-xs font-bold text-gray-300">Arithmetic Calculation:</h4>
-            <div className="text-xs text-gray-400 font-mono leading-relaxed">
+          <div className="mt-4 p-4 rounded-xl bg-surface border border-border flex flex-col gap-2">
+            <h4 className="text-xs font-bold text-secondary">Arithmetic Calculation:</h4>
+            <div className="text-xs text-muted font-mono leading-relaxed">
               Sum contribution = {activeWeights.map(w => (w.score * w.weight).toFixed(1)).join(' + ')} ={' '}
               {activeWeights.reduce((sum, w) => sum + w.score * w.weight, 0).toFixed(1)}
               <br />
@@ -317,7 +317,7 @@ export default function OverviewSection({
                   <br />
                 </>
               )}
-              <div className="mt-2 text-sm text-gray-200 font-semibold border-t border-white/10 pt-2 flex justify-between">
+              <div className="mt-2 text-sm text-primary font-semibold border-t border-border pt-2 flex justify-between">
                 <span>Final Normalized Score:</span>
                 <span className="text-sky-400">
                   {Math.round(activeWeights.reduce((sum, w) => sum + w.score * w.weight, 0) / sumWeights)} / 100

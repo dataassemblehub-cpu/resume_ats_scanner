@@ -47,7 +47,8 @@ function DashboardPageContent() {
     
     const currentScan = searchParams.get('scan');
     const scanQuery = currentScan ? `&scan=${currentScan}` : '';
-    router.push(`/dashboard?tab=${tabParam}${scanQuery}`);
+    const historicalQuery = searchParams.get('historical') === 'true' ? '&historical=true' : '';
+    router.push(`/dashboard?tab=${tabParam}${scanQuery}${historicalQuery}`);
   };
 
   useEffect(() => {
@@ -157,7 +158,7 @@ function DashboardPageContent() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-screen text-gray-400 bg-[#0d111d]">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-screen text-gray-400 bg-page">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
           <span className="text-xs font-semibold tracking-wider uppercase">Loading scan report...</span>
@@ -168,7 +169,7 @@ function DashboardPageContent() {
 
   if (error) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-screen p-6 bg-[#0d111d]">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-screen p-6 bg-page">
         <div className="glass-panel max-w-md p-8 flex flex-col items-center text-center gap-5 border-l-4 border-l-rose-500">
           <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -181,7 +182,7 @@ function DashboardPageContent() {
           </div>
           <button
             onClick={() => router.push('/')}
-            className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 text-xs font-semibold rounded-lg transition-all cursor-pointer active:scale-95"
+            className="px-4 py-2 bg-surface border-border hover:bg-card text-muted text-xs font-semibold rounded-lg transition-all cursor-pointer active:scale-95"
           >
             Go to Landing Page
           </button>
@@ -191,7 +192,7 @@ function DashboardPageContent() {
   }
 
   return (
-    <div className="flex-1 flex flex-col w-full min-h-screen relative z-10 bg-[#0d111d]">
+    <div className="flex-1 flex flex-col w-full min-h-screen relative z-10 bg-page">
       {result ? (
         <Dashboard
           result={result}
@@ -201,9 +202,13 @@ function DashboardPageContent() {
           setActiveTab={handleSetActiveTab}
           prevScore={prevScore}
           onRegenerateSuggestions={handleRegenerateRecommendations}
-          onLoadScan={(r) => {
+          onLoadScan={(r, isHistorical) => {
             setResult(r);
-            router.push(`/dashboard?tab=overview&restored=true`);
+            if (isHistorical) {
+              router.push(`/dashboard?tab=overview&scan=${r.resumeDetails?.id}&historical=true`);
+            } else {
+              router.push(`/dashboard?tab=overview&scan=${r.resumeDetails?.id}&restored=true`);
+            }
           }}
         />
       ) : (
@@ -216,9 +221,13 @@ function DashboardPageContent() {
             setActiveTab={handleSetActiveTab}
             prevScore={prevScore}
             onRegenerateSuggestions={handleRegenerateRecommendations}
-            onLoadScan={(r) => {
+            onLoadScan={(r, isHistorical) => {
               setResult(r);
-              router.push(`/dashboard?tab=overview&restored=true`);
+              if (isHistorical) {
+                router.push(`/dashboard?tab=overview&scan=${r.resumeDetails?.id}&historical=true`);
+              } else {
+                router.push(`/dashboard?tab=overview&scan=${r.resumeDetails?.id}&restored=true`);
+              }
             }}
           />
         )
@@ -230,7 +239,7 @@ function DashboardPageContent() {
 export default function DashboardPage() {
   return (
     <React.Suspense fallback={
-      <div className="flex-1 flex flex-col items-center justify-center min-h-screen text-gray-400 bg-[#0d111d]">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-screen text-gray-400 bg-page">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
         </div>

@@ -16,13 +16,13 @@ export default function LoadingStages({ stages }: LoadingStagesProps) {
   return (
     <div className="glass-panel p-6 flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h3 className="text-sm font-bold text-gray-100 uppercase tracking-wider">
+        <h3 className="text-sm font-bold text-primary uppercase tracking-wider">
           Analyzing Resume Layout & Context
         </h3>
-        <p className="text-xs text-gray-400">Processing the files through the ATS pipeline...</p>
+        <p className="text-xs text-muted">Processing the files through the ATS pipeline...</p>
       </div>
 
-      <div className="flex flex-col md:flex-row items-center gap-8 bg-black/20 p-6 rounded-2xl border border-white/5">
+      <div className="flex flex-col md:flex-row items-center gap-8 bg-sidebar p-6 rounded-2xl border border-border">
         {/* Radar Scanner Animation */}
         <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
           {/* Pulsing waves */}
@@ -30,14 +30,14 @@ export default function LoadingStages({ stages }: LoadingStagesProps) {
           <div className="absolute inset-4 rounded-full border border-violet-500/10 animate-pulse opacity-40" />
           
           {/* Radar concentric circles */}
-          <div className="absolute inset-0 rounded-full border border-white/5" />
-          <div className="absolute inset-[25%] rounded-full border border-white/5" />
-          <div className="absolute inset-[50%] rounded-full border border-white/5" />
-          <div className="absolute inset-[75%] rounded-full border border-white/5" />
+          <div className="absolute inset-0 rounded-full border border-border" />
+          <div className="absolute inset-[25%] rounded-full border border-border" />
+          <div className="absolute inset-[50%] rounded-full border border-border" />
+          <div className="absolute inset-[75%] rounded-full border border-border" />
           
           {/* Radar axis crosshairs */}
-          <div className="absolute h-full w-px bg-white/5" />
-          <div className="absolute w-full h-px bg-white/5" />
+          <div className="absolute h-full w-px bg-surface" />
+          <div className="absolute w-full h-px bg-surface" />
           
           {/* Rotating sweeping sector */}
           <div className="absolute inset-0 animate-spin" style={{ animationDuration: '4s' }}>
@@ -65,7 +65,7 @@ export default function LoadingStages({ stages }: LoadingStagesProps) {
                       ? 'bg-teal-500/5 border-teal-500/10 opacity-75'
                       : isError 
                         ? 'bg-rose-500/5 border-rose-500/20'
-                        : 'bg-white/5 border-white/5 opacity-40'
+                        : 'bg-surface border-border opacity-40'
                 }`}
               >
                 {/* Status Indicator */}
@@ -93,7 +93,7 @@ export default function LoadingStages({ stages }: LoadingStagesProps) {
                     </div>
                   )}
                   {stage.status === 'pending' && (
-                    <div className="w-4 h-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                    <div className="w-4 h-4 rounded-full bg-surface border border-border flex items-center justify-center">
                       <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
                     </div>
                   )}
@@ -109,7 +109,7 @@ export default function LoadingStages({ stages }: LoadingStagesProps) {
                           ? 'text-teal-400' 
                           : isError 
                             ? 'text-rose-400' 
-                            : 'text-gray-500'
+                            : 'text-muted'
                     }`}
                   >
                     {stage.label}

@@ -33,7 +33,7 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Modal Box */}
-      <div className="glass-panel w-full max-w-md p-6 relative z-10 overflow-hidden flex flex-col gap-6 bg-[#0d111d]/90 border border-white/10 shadow-2xl">
+      <div className="glass-panel w-full max-w-md p-6 relative z-10 overflow-hidden flex flex-col gap-6 bg-card border border-border shadow-2xl">
         {/* Glow Effects */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/10 to-transparent blur-2xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-sky-500/10 to-transparent blur-2xl pointer-events-none" />
@@ -41,7 +41,7 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-muted hover:text-primary transition-colors"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -56,24 +56,24 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
             </svg>
           </div>
           <div>
-            <h2 className="text-xl font-extrabold text-white tracking-tight bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+            <h2 className="text-xl font-extrabold text-primary tracking-tight bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
               Free Trial Exhausted
             </h2>
-            <p className="text-xs text-gray-400 mt-1 max-w-sm">
+            <p className="text-xs text-muted mt-1 max-w-sm">
               You have used your 1 free AI recommendations scan. Upgrade to Premium to unlock full capabilities.
             </p>
           </div>
         </div>
 
         {/* Feature List */}
-        <div className="flex flex-col gap-3 bg-white/5 border border-white/5 rounded-2xl p-4">
+        <div className="flex flex-col gap-3 bg-surface border border-border rounded-2xl p-4">
           <div className="flex items-start gap-3">
             <svg className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
             <div>
-              <h4 className="text-xs font-bold text-white">Unlimited AI Recommendations</h4>
-              <p className="text-[10px] text-gray-400 leading-relaxed">
+              <h4 className="text-xs font-bold text-primary">Unlimited AI Recommendations</h4>
+              <p className="text-[10px] text-muted leading-relaxed">
                 Scan as many resumes as you want with deep Google Gemini-powered insights.
               </p>
             </div>
@@ -84,8 +84,8 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
             <div>
-              <h4 className="text-xs font-bold text-white">Print-Optimized PDF Export</h4>
-              <p className="text-[10px] text-gray-400 leading-relaxed">
+              <h4 className="text-xs font-bold text-primary">Print-Optimized PDF Export</h4>
+              <p className="text-[10px] text-muted leading-relaxed">
                 Download fully clean, print-ready reports with custom layout optimization toggles.
               </p>
             </div>
@@ -96,8 +96,8 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
             <div>
-              <h4 className="text-xs font-bold text-white">Advanced Experience Optimization</h4>
-              <p className="text-[10px] text-gray-400 leading-relaxed">
+              <h4 className="text-xs font-bold text-primary">Advanced Experience Optimization</h4>
+              <p className="text-[10px] text-muted leading-relaxed">
                 Unlock clipboard copying of rewritten technical experience sentences.
               </p>
             </div>
@@ -109,13 +109,13 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
           <button
             onClick={handleUpgrade}
             disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-neutral-700 disabled:to-neutral-800 disabled:text-gray-500 text-xs font-extrabold text-white uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-98"
+            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-neutral-700 disabled:to-neutral-800 disabled:text-muted text-xs font-extrabold text-primary uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-98"
           >
             {loading ? 'Processing Upgrade...' : 'Upgrade to Premium Access'}
           </button>
           <button
             onClick={onClose}
-            className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider rounded-xl transition-all active:scale-98"
+            className="w-full py-3 bg-surface hover:bg-card border-border border border-border hover:border-border text-xs font-bold text-muted hover:text-primary uppercase tracking-wider rounded-xl transition-all active:scale-98"
           >
             Close & Go Back
           </button>

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { claimScan } from '@/lib/api';
+import { toast } from 'react-hot-toast';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
   };
 
   const handleAuthSuccess = async () => {
+    toast.success(activeTab === 'login' ? 'Successfully signed in!' : 'Account created successfully!');
     try {
       // Check if there's an active anonymous scan to claim
       const saved = localStorage.getItem('ats_analysis_result');
@@ -97,7 +99,9 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Authentication failed. Please try again.');
+      const msg = err.message || 'Authentication failed. Please try again.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -109,13 +113,13 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
       <div className="absolute inset-0" onClick={handleClose} />
 
       {/* Modal Box */}
-      <div className="glass-panel w-full max-w-md p-6 relative z-10 overflow-hidden flex flex-col gap-6 bg-[#0d111d]/90 border border-white/10 shadow-2xl">
+      <div className="glass-panel w-full max-w-md p-6 relative z-10 overflow-hidden flex flex-col gap-6 bg-card border border-border shadow-2xl">
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-500/10 to-transparent blur-2xl pointer-events-none" />
         
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-muted hover:text-primary transition-colors"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -124,18 +128,18 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
 
         {/* Title */}
         <div className="text-center">
-          <h2 className="text-xl font-extrabold text-white tracking-tight">
+          <h2 className="text-xl font-extrabold text-primary tracking-tight">
             {activeTab === 'login' && 'Welcome Back'}
             {activeTab === 'register' && 'Create Account'}
           </h2>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-muted mt-1">
             {activeTab === 'login' && 'Sign in to access resume history and AI recommendations'}
             {activeTab === 'register' && 'Join to scan resumes and unlock professional suggestions'}
           </p>
         </div>
 
         {/* Tab Toggle (Login & Register) */}
-        <div className="flex bg-white/5 border border-white/5 rounded-xl p-1">
+        <div className="flex bg-surface border border-border rounded-xl p-1">
           <button
             type="button"
             onClick={() => {
@@ -144,8 +148,8 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
             }}
             className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === 'login'
-                ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-primary shadow-md'
+                : 'text-muted hover:text-primary'
             }`}
           >
             Sign In
@@ -158,8 +162,8 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
             }}
             className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === 'register'
-                ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-gradient-to-r from-sky-500 to-violet-500 text-primary shadow-md'
+                : 'text-muted hover:text-primary'
             }`}
           >
             Register
@@ -185,7 +189,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
           
           {/* Email Address Input */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+            <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
               Email Address
             </label>
             <input
@@ -194,13 +198,13 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@domain.com"
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
+              className="w-full bg-surface border border-border rounded-lg px-3.5 py-2.5 text-xs text-primary placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
             />
           </div>
 
           {/* Password Input */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+            <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
               Password
             </label>
             <input
@@ -209,18 +213,18 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'login' }: Aut
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
+              className="w-full bg-surface border border-border rounded-lg px-3.5 py-2.5 text-xs text-primary placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all font-mono"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-sky-500/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full mt-2 py-3 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 text-primary text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-border-hover border-t-white rounded-full animate-spin" />
                 <span>Processing...</span>
               </>
             ) : (

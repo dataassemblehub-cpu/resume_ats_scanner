@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://resume-ats-scanner.vercel.ai'; // Update this to production URL if different
+  const baseUrl = 'https://ai-resume-ats-scanner.vercel.app'; // Update this to production URL if different
 
   return {
     rules: {

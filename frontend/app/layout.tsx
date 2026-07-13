@@ -10,7 +10,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://resume-ats-scanner.vercel.ai'),
+  metadataBase: new URL('https://ai-resume-ats-scanner.vercel.app'),
   title: {
     default: "Resume ATS Scanner & Dashboard",
     template: "%s | DataAssembleHub"
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Resume ATS Scanner & Dashboard",
     description: "Analyze, parse, and score your resume against Job Descriptions using hybrid semantic & keyword matches.",
-    url: 'https://resume-ats-scanner.vercel.ai',
+    url: 'https://ai-resume-ats-scanner.vercel.app',
     siteName: 'DataAssembleHub ATS Scanner',
     images: [
       {

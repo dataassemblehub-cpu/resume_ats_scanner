@@ -8,10 +8,17 @@ import Footer from '@/components/Footer';
 export const metadata: Metadata = {
   title: 'Free AI Resume ATS Scanner & Resume Optimizer',
   description: 'Scan your resume against job descriptions using our AI-powered ATS scanner. Get detailed scoring, missing keywords, and optimized bullet points.',
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: 'Free AI Resume ATS Scanner & Resume Optimizer',
     description: 'Scan your resume against job descriptions using our AI-powered ATS scanner. Get detailed scoring, missing keywords, and optimized bullet points.',
     type: 'website',
+  },
+  twitter: {
+    title: 'Free AI Resume ATS Scanner & Resume Optimizer',
+    description: 'Scan your resume against job descriptions using our AI-powered ATS scanner. Get detailed scoring, missing keywords, and optimized bullet points.',
   }
 };
 

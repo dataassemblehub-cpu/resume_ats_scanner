@@ -10,8 +10,37 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Resume ATS Scanner & Dashboard",
+  metadataBase: new URL('https://resume-ats-scanner.vercel.ai'),
+  title: {
+    default: "Resume ATS Scanner & Dashboard",
+    template: "%s | DataAssembleHub"
+  },
   description: "Analyze, parse, and score your resume against Job Descriptions using hybrid semantic & keyword matches.",
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: "Resume ATS Scanner & Dashboard",
+    description: "Analyze, parse, and score your resume against Job Descriptions using hybrid semantic & keyword matches.",
+    url: 'https://resume-ats-scanner.vercel.ai',
+    siteName: 'DataAssembleHub ATS Scanner',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Resume ATS Scanner Preview',
+      }
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Resume ATS Scanner & Dashboard",
+    description: "Analyze, parse, and score your resume against Job Descriptions using hybrid semantic & keyword matches.",
+    images: ['/og-image.png'],
+  },
 };
 
 import { ThemeProvider } from "@/components/ThemeProvider";

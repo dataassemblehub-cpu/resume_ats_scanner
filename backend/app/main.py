@@ -17,9 +17,12 @@ app = FastAPI(
 # Run database schema auto-migrations on startup
 @app.on_event("startup")
 def on_startup():
-    logger.info("Startup: executing database schema auto-migrations...")
-    init_db()
-    logger.info("Startup: database migrations complete.")
+    if not settings.SKIP_STARTUP_CHECKS:
+        logger.info("Startup: executing database schema auto-migrations...")
+        init_db()
+        logger.info("Startup: database migrations complete.")
+    else:
+        logger.info("Startup: SKIP_STARTUP_CHECKS is True. Bypassing database migrations to speed up cold start.")
     logger.info("Startup: all hooks completed successfully.")
 
 # Request logging middleware writing stats to app.log

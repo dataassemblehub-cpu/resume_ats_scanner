@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     PORT: int | None = None
     HOST: str = "0.0.0.0"
     ENV: str = "production"
+    SKIP_STARTUP_CHECKS: bool = False
+    
     
     # Gemini API Settings
     GEMINI_API_KEY: str | None = None

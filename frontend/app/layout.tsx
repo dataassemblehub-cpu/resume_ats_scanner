@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     siteName: 'DataAssembleHub ATS Scanner',
     images: [
       {
-        url: '/og-image.png',
+        url: 'https://ai-resume-ats-scanner.vercel.app/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Resume ATS Scanner Preview',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "Resume ATS Scanner & Dashboard",
     description: "Analyze, parse, and score your resume against Job Descriptions using hybrid semantic & keyword matches.",
-    images: ['/og-image.png'],
+    images: ['https://ai-resume-ats-scanner.vercel.app/og-image.png'],
   },
 };
 

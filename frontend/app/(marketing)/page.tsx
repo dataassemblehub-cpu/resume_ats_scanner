@@ -15,10 +15,19 @@ export const metadata: Metadata = {
     title: 'Free AI Resume ATS Scanner & Resume Optimizer',
     description: 'Scan your resume against job descriptions using our AI-powered ATS scanner. Get detailed scoring, missing keywords, and optimized bullet points.',
     type: 'website',
+    images: [
+      {
+        url: 'https://ai-resume-ats-scanner.vercel.app/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Resume ATS Scanner Preview',
+      }
+    ],
   },
   twitter: {
     title: 'Free AI Resume ATS Scanner & Resume Optimizer',
     description: 'Scan your resume against job descriptions using our AI-powered ATS scanner. Get detailed scoring, missing keywords, and optimized bullet points.',
+    images: ['https://ai-resume-ats-scanner.vercel.app/og-image.png'],
   }
 };
 
